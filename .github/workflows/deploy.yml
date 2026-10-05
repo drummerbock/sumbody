@@ -1,0 +1,135 @@
+name: Deploy SUMbody
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: sumbody-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Test SUMbody
+        env:
+          SECRET_KEY: "github-actions-test-secret"
+          DATABASE_URL: "sqlite:////tmp/sumbody-test.db"
+          APP_TIMEZONE: "America/New_York"
+        run: |
+          pip install -r requirements.txt
+          python -m py_compile ./*.py
+          python - <<'PY'
+          from app import app
+
+          client = app.test_client()
+          response = client.get("/login")
+          assert response.status_code == 200
+          print("SUMbody passed")
+          PY
+
+      - name: Configure secure connection
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+
+      - name: Upload and verify candidate
+        run: |
+          ssh cb_sumbody@vps63698.dreamhostps.com \
+            'mkdir -p /home/cb_sumbody/sumbody-next'
+
+          rsync -az --delete \
+            --exclude instance \
+            --exclude gunicorn.pid \
+            --exclude gunicorn.log \
+            -e "ssh -i ~/.ssh/id_ed25519" \
+            ./*.py requirements.txt static templates \
+            cb_sumbody@vps63698.dreamhostps.com:/home/cb_sumbody/sumbody-next/
+
+          ssh cb_sumbody@vps63698.dreamhostps.com \
+            'cd /home/cb_sumbody/sumbody-next && python3 -m py_compile ./*.py'
+
+      - name: Deploy and restart
+        run: |
+          ssh cb_sumbody@vps63698.dreamhostps.com <<'REMOTE'
+          set -e
+
+          LIVE="/home/cb_sumbody/sumbody.cameronjbock.com"
+          NEXT="/home/cb_sumbody/sumbody-next"
+          PID_FILE="$LIVE/gunicorn.pid"
+          PROCESS_PATTERN='[g]unicorn.*0.0.0.0:8015.*app:app'
+
+          export SECRET_KEY="$(cat /home/cb_sumbody/.sumbody_secret)"
+          export DATABASE_URL="sqlite:////home/cb_sumbody/sumbody.cameronjbock.com/instance/sumbody.db"
+          export APP_TIMEZONE="America/New_York"
+
+          # Verify the staged candidate before touching production.
+          cd "$NEXT"
+          python3 -c 'from app import app'
+
+          cp "$NEXT"/*.py "$NEXT/requirements.txt" "$LIVE/"
+          rsync -a --delete "$NEXT/static/" "$LIVE/static/"
+          rsync -a --delete "$NEXT/templates/" "$LIVE/templates/"
+
+          cd "$LIVE"
+
+          OLD_PID=""
+          if [ -s "$PID_FILE" ]; then
+            OLD_PID="$(cat "$PID_FILE")"
+          fi
+
+          if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+            kill "$OLD_PID"
+          else
+            pkill -u "$(id -u)" -f "$PROCESS_PATTERN" || true
+          fi
+
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+            if ! pgrep -u "$(id -u)" -f "$PROCESS_PATTERN" >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          if pgrep -u "$(id -u)" -f "$PROCESS_PATTERN" >/dev/null; then
+            pkill -9 -u "$(id -u)" -f "$PROCESS_PATTERN" || true
+            sleep 1
+          fi
+
+          rm -f "$PID_FILE"
+
+          nohup /home/cb_sumbody/.local/bin/gunicorn \
+            --pid "$PID_FILE" \
+            -w 2 -b 0.0.0.0:8015 app:app \
+            >> "$LIVE/gunicorn.log" 2>&1 < /dev/null &
+          NEW_PID=$!
+
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+            if curl -fsS http://127.0.0.1:8015/login >/dev/null; then
+              echo "SUMbody deployed successfully"
+              exit 0
+            fi
+            if ! kill -0 "$NEW_PID" 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          tail -n 50 "$LIVE/gunicorn.log"
+          exit 1
+          REMOTE
