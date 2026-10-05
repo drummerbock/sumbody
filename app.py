@@ -77,7 +77,12 @@ def create_app():
 
     @app.context_processor
     def globals():
-        return {"today": local_today()}
+        context = {"today": local_today(), "composer_areas": []}
+        if current_user.is_authenticated:
+            context["composer_areas"] = LifeArea.query.filter_by(
+                user_id=current_user.id, active=True
+            ).order_by(LifeArea.name).all()
+        return context
 
     @app.route("/")
     @login_required

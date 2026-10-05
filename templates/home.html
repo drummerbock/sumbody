@@ -1,2 +1,13 @@
-{% extends "base.html" %}{% block content %}<section class="hero"><div class="eyebrow">{{ today.strftime("%A, %B %-d") }}</div><h1>I am SUMbody.</h1><div class="score"><div><strong>{{today_count}}</strong><span>things today</span></div><div><strong>{{today_value}}</strong><span>total SUM</span></div></div><a class="primary" href="{{url_for('add_sum')}}">+ Add a SUM</a></section>
-<section><div class="section-head"><h2>Today</h2><span>Yesterday: {{yesterday_count}} · SUM {{yesterday_value}}</span></div>{% if recent %}<div class="entries">{% for e in recent %}<article class="entry"><div><b>{{e.description}}</b><span>{{e.life_area.name}}</span></div><span class="value">+{{e.value}}</span></article>{% endfor %}</div>{% else %}<div class="empty">Nothing logged yet today. Your first SUM can be tiny.</div>{% endif %}</section>{% endblock %}
+{% extends "base.html" %}{% block content %}
+<section class="hero">
+  <div class="eyebrow">{{ today.strftime("%A, %B %-d") }}</div>
+  <h1>Today, you added <em>something.</em></h1>
+  <div class="today-total"><div><strong>{{today_count}}</strong><span>tips</span></div><i></i><div><strong>{{today_value}}</strong><span>SUM</span></div></div>
+  <button class="primary hero-add" type="button" data-open-composer>+ Add a Tip</button>
+</section>
+<section class="day-ledger">
+  <div class="section-head"><div><div class="eyebrow">TODAY'S LEDGER</div><h2>The little things</h2></div><span>Yesterday · {{yesterday_count}} tips · SUM {{yesterday_value}}</span></div>
+  {% if recent %}<div class="entries">{% for e in recent %}<article class="entry"><div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}</span></div><span class="value">+{{e.value}}</span></article>{% endfor %}</div>
+  {% else %}<button class="empty empty-button" type="button" data-open-composer><span>+</span><b>Your first tip can be tiny.</b><small>Record one thing that added something to your day.</small></button>{% endif %}
+</section>
+{% endblock %}
