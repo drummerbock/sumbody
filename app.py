@@ -1,13 +1,17 @@
 import os
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
+csrf = CSRFProtect()
 login_manager = LoginManager()
 login_manager.login_view = "login"
 
@@ -40,51 +44,102 @@ class SumEntry(db.Model):
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-change-me")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///" + str(Path(app.instance_path) / "sumbody.db"))
+
+    secret_key = os.environ.get("SECRET_KEY")
+    if not secret_key:
+        raise RuntimeError("SECRET_KEY environment variable is required.")
+
+    app.config["SECRET_KEY"] = secret_key
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+        "DATABASE_URL", "sqlite:///" + str(Path(app.instance_path) / "sumbody.db")
+    )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = True
+    app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+    app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+    app.config["REMEMBER_COOKIE_SECURE"] = True
+
+    try:
+        app_tz = ZoneInfo(os.environ.get("APP_TIMEZONE", "America/New_York"))
+    except Exception as exc:
+        raise RuntimeError("APP_TIMEZONE must be a valid IANA timezone.") from exc
+
+    def local_today():
+        return datetime.now(app_tz).date()
+
     db.init_app(app)
+    csrf.init_app(app)
     login_manager.init_app(app)
     with app.app_context():
         db.create_all()
 
     @app.context_processor
     def globals():
-        return {"today": date.today()}
+        return {"today": local_today()}
 
     @app.route("/")
     @login_required
     def home():
-        today = date.today()
+        today = local_today()
         yesterday = today - timedelta(days=1)
+
         def totals(day):
             q = SumEntry.query.filter_by(user_id=current_user.id, occurred_on=day)
-            return q.count(), db.session.query(func.coalesce(func.sum(SumEntry.value), 0)).filter_by(user_id=current_user.id, occurred_on=day).scalar()
+            value = db.session.query(func.coalesce(func.sum(SumEntry.value), 0)).filter_by(
+                user_id=current_user.id, occurred_on=day
+            ).scalar()
+            return q.count(), value
+
         today_count, today_value = totals(today)
         yesterday_count, yesterday_value = totals(yesterday)
-        recent = SumEntry.query.filter_by(user_id=current_user.id, occurred_on=today).order_by(SumEntry.logged_at.desc()).limit(8).all()
-        return render_template("home.html", today_count=today_count, today_value=today_value, yesterday_count=yesterday_count, yesterday_value=yesterday_value, recent=recent)
+        recent = SumEntry.query.filter_by(
+            user_id=current_user.id, occurred_on=today
+        ).order_by(SumEntry.logged_at.desc()).limit(8).all()
+        return render_template(
+            "home.html",
+            today_count=today_count,
+            today_value=today_value,
+            yesterday_count=yesterday_count,
+            yesterday_value=yesterday_value,
+            recent=recent,
+        )
 
     @app.route("/add", methods=["GET", "POST"])
     @login_required
     def add_sum():
-        areas = LifeArea.query.filter_by(user_id=current_user.id, active=True).order_by(LifeArea.name).all()
+        areas = LifeArea.query.filter_by(
+            user_id=current_user.id, active=True
+        ).order_by(LifeArea.name).all()
         if request.method == "POST":
             description = request.form.get("description", "").strip()
             try:
                 value = int(request.form.get("value", ""))
                 area_id = int(request.form.get("life_area_id", ""))
-                occurred_on = datetime.strptime(request.form.get("occurred_on", ""), "%Y-%m-%d").date()
+                occurred_on = datetime.strptime(
+                    request.form.get("occurred_on", ""), "%Y-%m-%d"
+                ).date()
             except (ValueError, TypeError):
                 flash("Please complete all fields.", "error")
                 return render_template("add.html", areas=areas)
-            area = LifeArea.query.filter_by(id=area_id, user_id=current_user.id, active=True).first()
+            area = LifeArea.query.filter_by(
+                id=area_id, user_id=current_user.id, active=True
+            ).first()
             if not description or not area or value not in range(1, 6):
                 flash("Please complete all fields.", "error")
                 return render_template("add.html", areas=areas)
             comm = request.form.get("communicated")
-            entry = SumEntry(user_id=current_user.id, life_area_id=area.id, description=description, value=value, communicated=True if comm=="yes" else False if comm=="no" else None, occurred_on=occurred_on)
-            db.session.add(entry); db.session.commit()
+            entry = SumEntry(
+                user_id=current_user.id,
+                life_area_id=area.id,
+                description=description,
+                value=value,
+                communicated=True if comm == "yes" else False if comm == "no" else None,
+                occurred_on=occurred_on,
+            )
+            db.session.add(entry)
+            db.session.commit()
             flash("SUM added.", "success")
             return redirect(url_for("home"))
         return render_template("add.html", areas=areas)
@@ -97,79 +152,152 @@ def create_app():
         area = request.args.get("area", type=int)
         start = request.args.get("start", "")
         end = request.args.get("end", "")
-        if search: q = q.filter(SumEntry.description.ilike(f"%{search}%"))
-        if area: q = q.filter(SumEntry.life_area_id == area)
+        if search:
+            q = q.filter(SumEntry.description.ilike(f"%{search}%"))
+        if area:
+            q = q.filter(SumEntry.life_area_id == area)
         if start:
-            try: q = q.filter(SumEntry.occurred_on >= datetime.strptime(start, "%Y-%m-%d").date())
-            except ValueError: pass
+            try:
+                q = q.filter(SumEntry.occurred_on >= datetime.strptime(start, "%Y-%m-%d").date())
+            except ValueError:
+                pass
         if end:
-            try: q = q.filter(SumEntry.occurred_on <= datetime.strptime(end, "%Y-%m-%d").date())
-            except ValueError: pass
-        entries = q.order_by(SumEntry.occurred_on.desc(), SumEntry.logged_at.desc()).limit(500).all()
-        total_value = sum(e.value for e in entries)
-        areas = LifeArea.query.filter_by(user_id=current_user.id).order_by(LifeArea.name).all()
-        return render_template("history.html", entries=entries, total_value=total_value, areas=areas)
+            try:
+                q = q.filter(SumEntry.occurred_on <= datetime.strptime(end, "%Y-%m-%d").date())
+            except ValueError:
+                pass
+
+        total_count = q.count()
+        total_value = q.with_entities(func.coalesce(func.sum(SumEntry.value), 0)).scalar()
+        entries = q.order_by(
+            SumEntry.occurred_on.desc(), SumEntry.logged_at.desc()
+        ).limit(500).all()
+        areas = LifeArea.query.filter_by(
+            user_id=current_user.id
+        ).order_by(LifeArea.name).all()
+        return render_template(
+            "history.html",
+            entries=entries,
+            total_count=total_count,
+            total_value=total_value,
+            areas=areas,
+        )
 
     @app.route("/insights")
     @login_required
     def insights():
         entries = SumEntry.query.filter_by(user_id=current_user.id).all()
-        total_count = len(entries); total_value = sum(e.value for e in entries)
-        by_area = db.session.query(LifeArea.name, func.count(SumEntry.id), func.coalesce(func.sum(SumEntry.value),0)).join(SumEntry).filter(SumEntry.user_id==current_user.id).group_by(LifeArea.id).order_by(func.sum(SumEntry.value).desc()).all()
-        days = db.session.query(SumEntry.occurred_on, func.count(SumEntry.id), func.sum(SumEntry.value)).filter_by(user_id=current_user.id).group_by(SumEntry.occurred_on).all()
-        most_active = max(days, key=lambda x:x[1]) if days else None
-        highest_value = max(days, key=lambda x:x[2]) if days else None
+        total_count = len(entries)
+        total_value = sum(e.value for e in entries)
+        by_area = db.session.query(
+            LifeArea.name,
+            func.count(SumEntry.id),
+            func.coalesce(func.sum(SumEntry.value), 0),
+        ).join(SumEntry).filter(
+            SumEntry.user_id == current_user.id
+        ).group_by(LifeArea.id).order_by(func.sum(SumEntry.value).desc()).all()
+        days = db.session.query(
+            SumEntry.occurred_on,
+            func.count(SumEntry.id),
+            func.sum(SumEntry.value),
+        ).filter_by(user_id=current_user.id).group_by(SumEntry.occurred_on).all()
+        most_active = max(days, key=lambda x: x[1]) if days else None
+        highest_value = max(days, key=lambda x: x[2]) if days else None
         communicated = sum(1 for e in entries if e.communicated is True)
         comm_known = sum(1 for e in entries if e.communicated is not None)
-        return render_template("insights.html", total_count=total_count, total_value=total_value, avg=(total_value/total_count if total_count else 0), by_area=by_area, most_active=most_active, highest_value=highest_value, communicated=communicated, comm_known=comm_known)
+        return render_template(
+            "insights.html",
+            total_count=total_count,
+            total_value=total_value,
+            avg=(total_value / total_count if total_count else 0),
+            by_area=by_area,
+            most_active=most_active,
+            highest_value=highest_value,
+            communicated=communicated,
+            comm_known=comm_known,
+        )
 
     @app.route("/areas", methods=["GET", "POST"])
     @login_required
     def areas():
         if request.method == "POST":
             name = request.form.get("name", "").strip()
-            if name and not LifeArea.query.filter(func.lower(LifeArea.name)==name.lower(), LifeArea.user_id==current_user.id).first():
-                db.session.add(LifeArea(user_id=current_user.id, name=name)); db.session.commit()
+            if name and not LifeArea.query.filter(
+                func.lower(LifeArea.name) == name.lower(),
+                LifeArea.user_id == current_user.id,
+            ).first():
+                db.session.add(LifeArea(user_id=current_user.id, name=name))
+                db.session.commit()
             return redirect(url_for("areas"))
-        return render_template("areas.html", areas=LifeArea.query.filter_by(user_id=current_user.id).order_by(LifeArea.active.desc(), LifeArea.name).all())
+        return render_template(
+            "areas.html",
+            areas=LifeArea.query.filter_by(user_id=current_user.id)
+            .order_by(LifeArea.active.desc(), LifeArea.name).all(),
+        )
 
     @app.post("/areas/<int:area_id>/toggle")
     @login_required
     def toggle_area(area_id):
-        area = LifeArea.query.filter_by(id=area_id, user_id=current_user.id).first_or_404()
-        area.active = not area.active; db.session.commit()
+        area = LifeArea.query.filter_by(
+            id=area_id, user_id=current_user.id
+        ).first_or_404()
+        area.active = not area.active
+        db.session.commit()
         return redirect(url_for("areas"))
 
     @app.post("/sum/<int:entry_id>/delete")
     @login_required
     def delete_sum(entry_id):
-        entry = SumEntry.query.filter_by(id=entry_id, user_id=current_user.id).first_or_404()
-        db.session.delete(entry); db.session.commit(); flash("SUM deleted.", "success")
+        entry = SumEntry.query.filter_by(
+            id=entry_id, user_id=current_user.id
+        ).first_or_404()
+        db.session.delete(entry)
+        db.session.commit()
+        flash("SUM deleted.", "success")
         return redirect(request.referrer or url_for("history"))
 
-    @app.route("/login", methods=["GET","POST"])
+    @app.route("/login", methods=["GET", "POST"])
     def login():
-        if current_user.is_authenticated: return redirect(url_for("home"))
+        if current_user.is_authenticated:
+            return redirect(url_for("home"))
         if request.method == "POST":
-            user = User.query.filter_by(email=request.form.get("email","").strip().lower()).first()
-            if user and check_password_hash(user.password_hash, request.form.get("password","")):
-                login_user(user, remember=True); return redirect(url_for("home"))
+            user = User.query.filter_by(
+                email=request.form.get("email", "").strip().lower()
+            ).first()
+            if user and check_password_hash(
+                user.password_hash, request.form.get("password", "")
+            ):
+                login_user(user, remember=True)
+                return redirect(url_for("home"))
             flash("Email or password not recognized.", "error")
         return render_template("login.html")
 
     @app.route("/logout")
     @login_required
     def logout():
-        logout_user(); return redirect(url_for("login"))
+        logout_user()
+        return redirect(url_for("login"))
 
     @app.cli.command("create-user")
     def create_user():
         import getpass
-        email=input("Email: ").strip().lower(); name=input("Name: ").strip() or "SUMbody"; password=getpass.getpass("Password: ")
-        if User.query.filter_by(email=email).first(): print("User exists."); return
-        u=User(email=email,name=name,password_hash=generate_password_hash(password)); db.session.add(u); db.session.flush()
-        for n in ["Family","Friends","Myself","Fast Hands Drum Studio","Work","Other"]: db.session.add(LifeArea(user_id=u.id,name=n))
-        db.session.commit(); print("User created.")
+        email = input("Email: ").strip().lower()
+        name = input("Name: ").strip() or "SUMbody"
+        password = getpass.getpass("Password: ")
+        if User.query.filter_by(email=email).first():
+            print("User exists.")
+            return
+        u = User(
+            email=email,
+            name=name,
+            password_hash=generate_password_hash(password),
+        )
+        db.session.add(u)
+        db.session.flush()
+        for n in ["Family", "Friends", "Myself", "Fast Hands Drum Studio", "Work", "Other"]:
+            db.session.add(LifeArea(user_id=u.id, name=n))
+        db.session.commit()
+        print("User created.")
 
     return app
 
