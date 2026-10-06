@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ viewed_user.name }} · Super Admin{% endblock %}
+{% block content %}
+<section class="admin-shell">
+  <a class="admin-back" href="{{ url_for('admin_dashboard') }}">← All users</a>
+  <div class="eyebrow">USER ACCOUNT</div>
+  <h1>{{ viewed_user.name }}</h1>
+  <p class="lede">{{ viewed_user.email }}</p>
+
+  <div class="metric-grid admin-metrics">
+    <div class="metric"><strong>{{ beat_count }}</strong><span>Active Beats</span></div>
+    <div class="metric"><strong>{{ total_value }}</strong><span>Total Beat value</span></div>
+    <div class="metric"><strong>{{ active_area_count }}</strong><span>Life Areas</span></div>
+    <div class="metric"><strong>{{ rhythmos_count }}</strong><span>Active Rhythmos</span></div>
+  </div>
+
+  <div class="card admin-account-card">
+    <div><span>User ID</span><strong>{{ viewed_user.id }}</strong></div>
+    <div><span>Joined</span><strong>{{ viewed_user.created_at.strftime('%b %-d, %Y') if viewed_user.created_at else '—' }}</strong></div>
+    <div><span>Last activity</span><strong>{{ last_activity.strftime('%b %-d, %Y at %-I:%M %p') if last_activity else 'No Beats yet' }}</strong></div>
+    <div><span>Onboarding</span><strong>{{ 'Complete' if viewed_user.onboarding_complete else 'Not complete' }}</strong></div>
+    <div><span>Archived Beats</span><strong>{{ archived_beat_count }}</strong></div>
+  </div>
+
+  <p class="admin-privacy-note">Journal entry text is intentionally not shown here.</p>
+</section>
+{% endblock %}
