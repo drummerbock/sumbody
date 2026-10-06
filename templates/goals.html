@@ -1,14 +1,14 @@
-{% extends "base.html" %}{% block title %}Goals · SUMbody{% endblock %}{% block content %}
-<div class="eyebrow">WHERE YOU WANT TO SHOW UP</div><h1>Goals</h1>
-<p class="lede">Not a to-do list. A reminder of the parts of your life you want to give more of yourself to.</p>
+{% extends "base.html" %}{% block title %}Rhythmos · Becoming the Heartbeat{% endblock %}{% block content %}
+<div class="eyebrow">THE RHYTHM YOU INTEND TO CREATE</div><h1>Rhythmos</h1>
+<p class="lede">Rhythmos are the rhythms you intentionally want to establish or strengthen.</p>
 <form method="post" class="goal-composer card">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <label>Life Area<select name="life_area_id" required><option value="">Choose an area</option>{% for a in areas %}<option value="{{a.id}}">{{a.name}}</option>{% endfor %}</select></label>
-<label>Your intention<input name="intention" maxlength="240" required placeholder="Be more present at home"></label>
-<label>Optional target<input name="target" maxlength="120" placeholder="e.g. 3 meaningful Tips each week"></label>
-<button class="primary">Add Goal</button>
+<label>The rhythm you want to establish<input name="intention" maxlength="240" required placeholder="Be present at home"></label>
+<label>Optional target<input name="target" maxlength="120" placeholder="e.g. 3 meaningful Beats each week"></label>
+<button class="primary">Add Rhythmos</button>
 </form>
-<section class="goals-list"><div class="section-head"><div><div class="eyebrow">YOUR INTENTIONS</div><h2>Keep these in sight</h2></div></div>
+<section class="goals-list"><div class="section-head"><div><div class="eyebrow">YOUR RHYTHMOS</div><h2>The rhythms you're building</h2></div></div>
 {% for g in goals %}<article class="goal-row {{'goal-archived' if not g.active}}"><div><span class="goal-area">{{g.life_area.name}}</span><b>{{g.intention}}</b>{% if g.target %}<small>{{g.target}}</small>{% endif %}</div><form method="post" action="{{url_for('toggle_goal',goal_id=g.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'archive-button' if g.active else 'restore-button'}}">{{'Archive' if g.active else 'Restore'}}</button></form></article>
-{% else %}<div class="empty">No goals yet. Choose one part of your life you want to keep in view.</div>{% endfor %}
+{% else %}<div class="empty">No Rhythmos yet. Choose one rhythm you want to establish.</div>{% endfor %}
 </section>{% endblock %}
