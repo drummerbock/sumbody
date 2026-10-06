@@ -11,4 +11,8 @@
 <section class="goals-list"><div class="section-head"><div><div class="eyebrow">YOUR RHYTHMOS</div><h2>The rhythms you're building</h2></div></div>
 {% for g in goals %}<article class="goal-row {{'goal-archived' if not g.active}}"><div><span class="goal-area">{{g.life_area.name}}</span><b>{{g.intention}}</b>{% if g.target %}<small>{{g.target}}</small>{% endif %}</div><form method="post" action="{{url_for('toggle_goal',goal_id=g.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'archive-button' if g.active else 'restore-button'}}">{{'Archive' if g.active else 'Restore'}}</button></form></article>
 {% else %}<div class="empty">No Rhythmos yet. Choose one rhythm you want to establish.</div>{% endfor %}
+</section>
+<section class="rhythmos-areas">
+  <div class="section-head"><div><div class="eyebrow">LIFE AREAS</div><h2>Where your rhythm lives</h2><p class="lede">Life Areas are the parts of your life where you want to establish rhythm.</p></div><a class="secondary" href="{{url_for('areas')}}">Manage Life Areas</a></div>
+  <div class="area-summary">{% for a in all_areas %}<span class="area-pill {{'muted-area' if not a.active}}">{{a.name}}</span>{% endfor %}</div>
 </section>{% endblock %}

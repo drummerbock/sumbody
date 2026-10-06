@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-nav-refine') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-rhythmos-integrate') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -15,7 +15,6 @@
     <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today's Tempo</a>
     <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
     <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
-    <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Life Areas</a>
   </nav>
   <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Beat</button>
   <details class="account-menu">
@@ -41,7 +40,6 @@
   <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
   <button class="mobile-add" type="button" data-open-composer aria-label="Add Beat">+</button>
   <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
-  <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Areas</a>
 </footer>
 
 <section class="quick-composer" aria-label="Quick Beat composer">
