@@ -23,6 +23,7 @@
       <div class="account-menu-name">{{current_user.name}}</div>
       <a href="{{url_for('insights')}}">Insights</a>
       <a href="{{url_for('onboarding')}}">How it works</a>
+      {% if is_super_admin %}<a href="{{url_for('admin_dashboard')}}">Super Admin</a>{% endif %}
       <a href="{{url_for('logout')}}">Log out</a>
     </div>
   </details>
@@ -34,7 +35,7 @@
 {% block content %}{% endblock %}
 </main>
 
-{% if current_user.is_authenticated %}
+{% if current_user.is_authenticated and not (request.endpoint or '').startswith('admin') %}
 <footer>
   <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today's<br>Tempo</a>
   <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
