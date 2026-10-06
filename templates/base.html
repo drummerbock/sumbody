@@ -61,8 +61,7 @@
 
   const open=()=>{
     if(quickInput){
-      quickInput.scrollIntoView({behavior:'smooth',block:'center'});
-      setTimeout(()=>quickInput.focus(),180);
+      quickInput.focus();
       return;
     }
     if(!composer) return;
@@ -80,7 +79,7 @@
   if(location.pathname==='/add') open();
 })();
 </script>
-{% block scripts %}{% endblock %}
 {% endif %}
+{% block scripts %}{% endblock %}
 </body>
 </html>
