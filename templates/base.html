@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-rhythmos-integrate') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-super-admin') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -16,7 +16,7 @@
     <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
     <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
   </nav>
-  <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Beat</button>
+  {% if not (request.endpoint or '').startswith('admin') %}<button class="quick-add desktop-add" type="button" data-open-composer>+ Add Beat</button>{% endif %}
   <details class="account-menu">
     <summary aria-label="Open account menu">{{ current_user.name[:1]|upper }}</summary>
     <div class="account-menu-panel">
