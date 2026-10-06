@@ -3,19 +3,19 @@
 {% block content %}
 <section class="onboarding">
   <div class="eyebrow">WELCOME, {{current_user.name|upper}}</div>
-  <h1>The framework, <em>put into practice.</em></h1>
-  <p class="lede onboarding-intro">You do not need to learn a complicated system. Start by noticing what you do. Over time, the pattern becomes visible.</p>
+  <h1>Practice <em>becoming the heartbeat.</em></h1>
+  <p class="lede onboarding-intro">Prepare the instrument within, establish your tempo, initiate rhythm, sustain your cadence.</p>
 
   <div class="onboarding-steps">
-    <article class="onboarding-step"><span>01</span><div><h2>Beat</h2><p>A Beat is one meaningful action. Called someone you love. Took a walk. Finished something difficult. Helped a coworker. Start small.</p></div></article>
-    <article class="onboarding-step"><span>02</span><div><h2>Today's Tempo</h2><p>Your Beats tell the story of how you are actually moving through today. Do not plan the perfect day. Record the one you are living.</p></div></article>
-    <article class="onboarding-step"><span>03</span><div><h2>Rhythmos</h2><p>Rhythmos is the rhythm you intentionally want to establish or strengthen. Name the patterns you want to create in the parts of life that matter to you.</p></div></article>
-    <article class="onboarding-step"><span>04</span><div><h2>Audify</h2><p>One Beat is an action. Repeated Beats become rhythm. Audify makes that rhythm perceptible so you can see what your actions are actually creating.</p></div></article>
+    <article class="onboarding-step"><span>01</span><div><h2>Beat</h2><p>A Beat is a meaningful action. As Beats repeat, they begin to establish rhythm.</p></div></article>
+    <article class="onboarding-step"><span>02</span><div><h2>Today's Tempo</h2><p>Your Beats reveal how you are actually moving through today. Over time, your tempo becomes visible.</p></div></article>
+    <article class="onboarding-step"><span>03</span><div><h2>Rhythmos</h2><p>Rhythmos are the daily movements you want to strengthen. They turn intention into a rhythm you can practice.</p></div></article>
+    <article class="onboarding-step"><span>04</span><div><h2>Audify</h2><p>Repeated Beats establish rhythm. Audify lets you hear the heartbeat those rhythms are creating.</p></div></article>
   </div>
 
   <form method="post" class="onboarding-finish">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <p><strong>You do not need to become someone different.</strong><br>Start with one Beat.</p>
+    <p><strong>You do not need to become someone different.</strong><br>You need to hear your heart beat.</p>
     <button class="primary">Enter Today's Tempo →</button>
   </form>
 </section>
