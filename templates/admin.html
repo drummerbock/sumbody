@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Super Admin · SUMbody{% endblock %}
+{% block content %}
+<section class="admin-shell">
+  <div class="admin-head">
+    <div>
+      <div class="eyebrow">SUPER ADMIN</div>
+      <h1>Users</h1>
+      <p class="lede">A private view of SUMbody accounts and basic usage.</p>
+    </div>
+  </div>
+
+  <div class="metric-grid admin-metrics">
+    <div class="metric"><strong>{{ total_users }}</strong><span>Users</span></div>
+    <div class="metric"><strong>{{ total_beats }}</strong><span>Active Beats</span></div>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Joined</th>
+          <th>Last activity</th>
+          <th>Beats</th>
+          <th>Life Areas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in user_rows %}
+        <tr>
+          <td>
+            <a class="admin-user-link" href="{{ url_for('admin_user', user_id=row.user.id) }}">{{ row.user.name }}</a>
+            <span>{{ row.user.email }}</span>
+          </td>
+          <td>{{ row.user.created_at.strftime('%b %-d, %Y') if row.user.created_at else '—' }}</td>
+          <td>{{ row.last_activity.strftime('%b %-d, %Y') if row.last_activity else 'No Beats yet' }}</td>
+          <td>{{ row.beat_count }}</td>
+          <td>{{ row.active_area_count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No users yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
