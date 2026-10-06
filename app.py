@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(120), nullable=False, default="Becoming the Heartbeat")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    onboarding_complete = db.Column(db.Boolean, default=False, nullable=False)
 
 class LifeArea(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -89,6 +90,10 @@ def create_app():
         columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(sum_entry)"))}
         if "archived" not in columns:
             db.session.execute(db.text("ALTER TABLE sum_entry ADD COLUMN archived BOOLEAN NOT NULL DEFAULT 0"))
+            db.session.commit()
+        user_columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(user)"))}
+        if "onboarding_complete" not in user_columns:
+            db.session.execute(db.text("ALTER TABLE user ADD COLUMN onboarding_complete BOOLEAN NOT NULL DEFAULT 1"))
             db.session.commit()
 
     @app.after_request
@@ -357,6 +362,43 @@ def create_app():
         db.session.commit()
         return redirect(url_for("goals"))
 
+    @app.route("/signup", methods=["GET", "POST"])
+    def signup():
+        if current_user.is_authenticated:
+            return redirect(url_for("home"))
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            confirm = request.form.get("confirm_password", "")
+            if not name or not email:
+                flash("Enter your name and email.", "error")
+            elif len(password) < 10:
+                flash("Use a password with at least 10 characters.", "error")
+            elif password != confirm:
+                flash("Passwords do not match.", "error")
+            elif User.query.filter(func.lower(User.email) == email).first():
+                flash("An account already exists for that email.", "error")
+            else:
+                user = User(name=name, email=email, password_hash=generate_password_hash(password), onboarding_complete=False)
+                db.session.add(user)
+                db.session.flush()
+                for area_name in ["Family", "Friends", "Myself", "Work", "Other"]:
+                    db.session.add(LifeArea(user_id=user.id, name=area_name))
+                db.session.commit()
+                login_user(user, remember=True)
+                return redirect(url_for("onboarding"))
+        return render_template("signup.html")
+
+    @app.route("/onboarding", methods=["GET", "POST"])
+    @login_required
+    def onboarding():
+        if request.method == "POST":
+            current_user.onboarding_complete = True
+            db.session.commit()
+            return redirect(url_for("home"))
+        return render_template("onboarding.html")
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if current_user.is_authenticated:
@@ -369,6 +411,8 @@ def create_app():
                 user.password_hash, request.form.get("password", "")
             ):
                 login_user(user, remember=True)
+                if not user.onboarding_complete:
+                    return redirect(url_for("onboarding"))
                 return redirect(url_for("home"))
             flash("Email or password not recognized.", "error")
         return render_template("login.html")
@@ -392,6 +436,7 @@ def create_app():
             email=email,
             name=name,
             password_hash=generate_password_hash(password),
+            onboarding_complete=True,
         )
         db.session.add(u)
         db.session.flush()
