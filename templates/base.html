@@ -5,13 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0d0f0e">
   <title>{% block title %}SUMbody{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-nav-recorder') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
   {% if current_user.is_authenticated %}
-  <nav><a href="{{url_for('home')}}">Today</a><a href="{{url_for('history')}}">Explore</a><a href="{{url_for('insights')}}">Insights</a><a href="{{url_for('goals')}}">Goals</a><a href="{{url_for('areas')}}">Life Areas</a></nav>
+  <nav>
+    <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today</a>
+    <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Explore</a>
+    <a class="{{'active' if request.endpoint == 'insights' else ''}}" href="{{url_for('insights')}}">Insights</a>
+    <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Goals</a>
+    <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Life Areas</a>
+  </nav>
   <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Tip</button>
   {% endif %}
 </header>
@@ -23,11 +29,11 @@
 
 {% if current_user.is_authenticated %}
 <footer>
-  <a href="{{url_for('home')}}">Today</a>
-  <a href="{{url_for('history')}}">Explore</a>
-  <a href="{{url_for('goals')}}">Goals</a>
-  <a href="{{url_for('insights')}}">Insights</a>
-  <a href="{{url_for('areas')}}">Areas</a>
+  <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today</a>
+  <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Explore</a>
+  <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Goals</a>
+  <a class="{{'active' if request.endpoint == 'insights' else ''}}" href="{{url_for('insights')}}">Insights</a>
+  <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Areas</a>
 </footer>
 
 <section class="quick-composer" aria-label="Quick Tip composer">
@@ -141,10 +147,18 @@
   });
   form.addEventListener('pointerdown', activateComposer);
 
+  const submitRecorder = () => {
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+      return;
+    }
+    form.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+  };
+
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
-      form.requestSubmit();
+      submitRecorder();
     }
   });
 
