@@ -77,6 +77,7 @@ jobs:
           export SECRET_KEY="$(cat /home/cb_sumbody/.sumbody_secret)"
           export DATABASE_URL="sqlite:////home/cb_sumbody/sumbody.cameronjbock.com/instance/sumbody.db"
           export APP_TIMEZONE="America/New_York"
+          export SUPER_ADMIN_EMAIL="cam@fasthandsdrumstudio.com"
 
           # Verify the staged candidate before touching production.
           cd "$NEXT"
