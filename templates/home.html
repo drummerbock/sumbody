@@ -2,12 +2,197 @@
 <section class="hero">
   <div class="eyebrow">{{ today.strftime("%A, %B %-d") }}</div>
   <h1>Today, you added <em>something.</em></h1>
-  <div class="today-total"><div><strong>{{today_count}}</strong><span>tips</span></div><i></i><div><strong>{{today_value}}</strong><span>SUM</span></div></div>
+  <div class="today-total">
+    <div><strong id="today-tip-count">{{today_count}}</strong><span>tips</span></div>
+    <i></i>
+    <div><strong id="today-sum-value">{{today_value}}</strong><span>SUM</span></div>
+  </div>
   <button class="primary hero-add" type="button" data-open-composer>+ Add a Tip</button>
 </section>
+
 <section class="day-ledger">
-  <div class="section-head"><div><div class="eyebrow">TODAY'S LEDGER</div><h2>The little things</h2></div><span>Yesterday · {{yesterday_count}} tips · SUM {{yesterday_value}}</span></div>
-  {% if recent %}<div class="entries">{% for e in recent %}<article class="entry {{'archived-entry' if e.archived}}"><div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}{{' · Archived' if e.archived}}</span></div><div class="entry-actions"><span class="value">+{{e.value}}</span><form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'restore-button' if e.archived else 'archive-button'}}" type="submit">{{'Restore' if e.archived else 'Archive'}}</button></form></div></article>{% endfor %}</div>
-  {% else %}<button class="empty empty-button" type="button" data-open-composer><span>+</span><b>Your first tip can be tiny.</b><small>Record one thing that added something to your day.</small></button>{% endif %}
+  <div class="section-head">
+    <div><div class="eyebrow">TODAY'S LEDGER</div><h2>The little things</h2></div>
+    <span>Yesterday · {{yesterday_count}} tips · SUM {{yesterday_value}}</span>
+  </div>
+
+  <div class="entries" id="today-entries">
+    {% for e in recent %}
+    <article class="entry {{'archived-entry' if e.archived}}">
+      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}{{' · Archived' if e.archived}}</span></div>
+      <div class="entry-actions">
+        <span class="value">+{{e.value}}</span>
+        <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="{{'restore-button' if e.archived else 'archive-button'}}" type="submit">{{'Restore' if e.archived else 'Archive'}}</button>
+        </form>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <button class="empty empty-button" id="today-empty" type="button" data-open-composer {% if recent %}hidden{% endif %}>
+    <span>+</span><b>Your first tip can be tiny.</b><small>Record one thing that added something to your day.</small>
+  </button>
 </section>
+
+<section class="quick-composer" aria-label="Quick Tip composer">
+  <form method="post" action="{{url_for('add_sum')}}" id="quick-tip-form" data-today="{{today.isoformat()}}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="quick-tip-line">
+      <textarea id="quick-tip-input" name="description" rows="1" required enterkeyhint="send" aria-label="What did you do?" placeholder="{{ 'What else happened?' if recent else 'What did you do?' }}"></textarea>
+      <button class="quick-send" type="submit" aria-label="Add Tip">↑</button>
+    </div>
+
+    <div class="quick-controls">
+      <div class="quick-control-group quick-area-group">
+        <span class="quick-control-label">Life Area</span>
+        <div class="quick-area-chips">
+          {% for a in composer_areas %}
+          <label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}" required><span>{{a.name}}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="quick-control-group quick-value-group">
+        <span class="quick-control-label">SUM</span>
+        <div class="quick-value-chips" aria-label="Tip value">
+          {% for n in range(1,6) %}
+          <label class="quick-value"><input type="radio" name="value" value="{{n}}" {% if n == 1 %}checked{% endif %}><span>+{{n}}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-meta">
+      <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
+      <details>
+        <summary>More</summary>
+        <div class="quick-more">
+          <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
+          <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
+        </div>
+      </details>
+      <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const form = document.getElementById('quick-tip-form');
+  if (!form) return;
+
+  const input = document.getElementById('quick-tip-input');
+  const send = form.querySelector('.quick-send');
+  const status = document.getElementById('rapid-status');
+  const count = document.getElementById('today-tip-count');
+  const sum = document.getElementById('today-sum-value');
+  const entries = document.getElementById('today-entries');
+  const empty = document.getElementById('today-empty');
+  const csrf = form.querySelector('input[name="csrf_token"]').value;
+  const today = form.dataset.today;
+
+  const sizeInput = () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 112) + 'px';
+  };
+
+  const addEntryToLedger = (entry) => {
+    const article = document.createElement('article');
+    article.className = 'entry rapid-entry';
+
+    const copy = document.createElement('div');
+    copy.className = 'entry-copy';
+    const description = document.createElement('b');
+    description.textContent = entry.description;
+    const area = document.createElement('span');
+    area.textContent = entry.life_area;
+    copy.append(description, area);
+
+    const actions = document.createElement('div');
+    actions.className = 'entry-actions';
+    const value = document.createElement('span');
+    value.className = 'value';
+    value.textContent = '+' + entry.value;
+
+    const archiveForm = document.createElement('form');
+    archiveForm.method = 'post';
+    archiveForm.action = '/sum/' + entry.id + '/toggle-archive';
+    const token = document.createElement('input');
+    token.type = 'hidden';
+    token.name = 'csrf_token';
+    token.value = csrf;
+    const archive = document.createElement('button');
+    archive.type = 'submit';
+    archive.className = 'archive-button';
+    archive.textContent = 'Archive';
+    archiveForm.append(token, archive);
+
+    actions.append(value, archiveForm);
+    article.append(copy, actions);
+    entries.prepend(article);
+    empty.hidden = true;
+  };
+
+  input.addEventListener('input', sizeInput);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+
+    send.disabled = true;
+    status.className = 'rapid-status';
+    status.textContent = 'Adding…';
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Could not add that Tip.');
+
+      count.textContent = data.today_count;
+      sum.textContent = data.today_value;
+      if (data.entry.occurred_on === today) addEntryToLedger(data.entry);
+
+      input.value = '';
+      input.placeholder = 'What else happened?';
+      input.style.height = 'auto';
+
+      const one = form.querySelector('input[name="value"][value="1"]');
+      if (one) one.checked = true;
+      const shared = form.querySelector('input[name="communicated"]');
+      if (shared) shared.checked = false;
+      const date = form.querySelector('input[name="occurred_on"]');
+      if (date) date.value = today;
+
+      status.className = 'rapid-status success';
+      status.textContent = 'Added · ' + data.entry.life_area + ' · +' + data.entry.value;
+      input.focus();
+    } catch (error) {
+      status.className = 'rapid-status error';
+      status.textContent = error.message || 'Could not add that Tip.';
+      input.focus();
+    } finally {
+      send.disabled = false;
+    }
+  });
+
+  sizeInput();
+})();
+</script>
 {% endblock %}
