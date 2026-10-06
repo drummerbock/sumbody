@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0d0f0e">
-  <title>{% block title %}SUMbody{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-nav-recorder') }}">
+  <meta name="theme-color" content="#11110f">
+  <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-bth-rebrand') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
-  <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
+  <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="brand-kicker">I AM</span><span class="brand-title">BECOMING THE HEARTBEAT</span></a>
   {% if current_user.is_authenticated %}
   <nav>
-    <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today</a>
-    <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Explore</a>
+    <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today's Tempo</a>
+    <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
     <a class="{{'active' if request.endpoint == 'insights' else ''}}" href="{{url_for('insights')}}">Insights</a>
-    <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Goals</a>
+    <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
     <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Life Areas</a>
   </nav>
-  <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Tip</button>
+  <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Beat</button>
   {% endif %}
 </header>
 
@@ -29,19 +29,19 @@
 
 {% if current_user.is_authenticated %}
 <footer>
-  <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today</a>
-  <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Explore</a>
-  <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Goals</a>
+  <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today's Tempo</a>
+  <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
+  <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
   <a class="{{'active' if request.endpoint == 'insights' else ''}}" href="{{url_for('insights')}}">Insights</a>
   <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Areas</a>
 </footer>
 
-<section class="quick-composer" aria-label="Quick Tip composer">
-  <form method="post" action="{{url_for('add_sum')}}" id="quick-tip-form" data-today="{{today.isoformat()}}">
+<section class="quick-composer" aria-label="Quick Beat composer">
+  <form method="post" action="{{url_for('add_sum')}}" id="quick-beat-form" data-today="{{today.isoformat()}}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="quick-tip-line">
-      <textarea id="quick-tip-input" name="description" rows="1" required enterkeyhint="send" aria-label="What did you do?" placeholder="{{ 'What else happened?' if recent is defined and recent else 'What did you do?' }}"></textarea>
-      <button class="quick-send" type="submit" aria-label="Add Tip">↑</button>
+    <div class="quick-beat-line">
+      <textarea id="quick-beat-input" name="description" rows="1" required enterkeyhint="send" aria-label="What did you do?" placeholder="{{ 'What else happened?' if recent is defined and recent else 'What did you do?' }}"></textarea>
+      <button class="quick-send" type="submit" aria-label="Add Beat">↑</button>
     </div>
 
     <div class="quick-controls">
@@ -55,8 +55,8 @@
       </div>
 
       <div class="quick-control-group quick-value-group">
-        <span class="quick-control-label">SUM</span>
-        <div class="quick-value-chips" aria-label="Tip value">
+        <span class="quick-control-label">BEAT</span>
+        <div class="quick-value-chips" aria-label="Beat value">
           {% for n in range(1,6) %}
           <label class="quick-value"><input type="radio" name="value" value="{{n}}" {% if n == 1 %}checked{% endif %}><span>+{{n}}</span></label>
           {% endfor %}
@@ -80,11 +80,11 @@
 
 <script>
 (() => {
-  const form = document.getElementById('quick-tip-form');
+  const form = document.getElementById('quick-beat-form');
   if (!form) return;
 
   const composer = form.closest('.quick-composer');
-  const input = document.getElementById('quick-tip-input');
+  const input = document.getElementById('quick-beat-input');
   const send = form.querySelector('.quick-send');
   const status = document.getElementById('rapid-status');
   const count = document.getElementById('today-tip-count');
@@ -204,7 +204,7 @@
         }
       });
       const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || 'Could not add that Tip.');
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Could not add that Beat.');
 
       if (count) count.textContent = data.today_count;
       if (sum) sum.textContent = data.today_value;
@@ -226,7 +226,7 @@
       input.focus();
     } catch (error) {
       status.className = 'rapid-status error';
-      status.textContent = error.message || 'Could not add that Tip.';
+      status.textContent = error.message || 'Could not add that Beat.';
       input.focus();
     } finally {
       send.disabled = false;
