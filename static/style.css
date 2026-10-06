@@ -23,8 +23,8 @@
 .quick-send:hover{background:var(--gold2);transform:translateY(-1px)}
 .quick-send:disabled{opacity:.55;cursor:wait;transform:none}
 .quick-controls,.quick-meta{max-height:0;opacity:0;overflow:hidden;pointer-events:none;transition:max-height .24s ease,opacity .18s ease,margin .24s ease}
-.quick-composer:focus-within .quick-controls{max-height:150px;opacity:1;pointer-events:auto;margin-top:10px}
-.quick-composer:focus-within .quick-meta{max-height:100px;opacity:1;pointer-events:auto;margin-top:8px}
+.quick-composer:focus-within .quick-controls,.quick-composer.is-active .quick-controls{max-height:150px;opacity:1;pointer-events:auto;margin-top:10px}
+.quick-composer:focus-within .quick-meta,.quick-composer.is-active .quick-meta{max-height:100px;opacity:1;pointer-events:auto;margin-top:8px}
 .quick-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:0 4px}
 .quick-control-group{min-width:0}
 .quick-control-label{display:block;margin-bottom:6px;color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
@@ -58,8 +58,8 @@
   .quick-tip-line textarea{font-size:19px;padding:11px;min-height:46px}
   .quick-send{width:46px;height:46px;flex-basis:46px}
   .quick-controls{grid-template-columns:1fr;gap:9px}
-  .quick-composer:focus-within .quick-controls{max-height:190px}
-  .quick-composer:focus-within .quick-meta{max-height:120px}
+  .quick-composer:focus-within .quick-controls,.quick-composer.is-active .quick-controls{max-height:190px}
+  .quick-composer:focus-within .quick-meta,.quick-composer.is-active .quick-meta{max-height:120px}
   .quick-meta{flex-wrap:wrap;gap:7px 10px}
   .rapid-hint{width:100%;margin:0}
   .rapid-status{margin-left:auto}
