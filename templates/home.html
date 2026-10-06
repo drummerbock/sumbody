@@ -85,6 +85,7 @@
   const form = document.getElementById('quick-tip-form');
   if (!form) return;
 
+  const composer = form.closest('.quick-composer');
   const input = document.getElementById('quick-tip-input');
   const send = form.querySelector('.quick-send');
   const status = document.getElementById('rapid-status');
@@ -137,7 +138,13 @@
     empty.hidden = true;
   };
 
-  input.addEventListener('input', sizeInput);
+  const activateComposer = () => composer && composer.classList.add('is-active');
+  input.addEventListener('focus', activateComposer);
+  input.addEventListener('input', () => {
+    activateComposer();
+    sizeInput();
+  });
+  form.addEventListener('pointerdown', activateComposer);
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
