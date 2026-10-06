@@ -7,7 +7,7 @@
   <title>{% block title %}SUMbody{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
 </head>
-<body class="{{ 'home-page' if request.endpoint == 'home' else '' }}">
+<body>
 <header class="topbar">
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
   {% if current_user.is_authenticated %}
@@ -22,6 +22,7 @@
 {% if current_user.is_authenticated %}
 <button class="fab" type="button" data-open-composer aria-label="Add a tip">+</button>
 <footer><a href="{{url_for('home')}}">Today</a><a href="{{url_for('history')}}">Explore</a><a href="{{url_for('goals')}}">Goals</a><span class="footer-gap"></span><a href="{{url_for('insights')}}">Insights</a><a href="{{url_for('areas')}}">Areas</a></footer>
+
 {% if request.endpoint != 'home' %}
 <div class="composer-backdrop" data-close-composer></div>
 <section class="composer" id="tip-composer" role="dialog" aria-modal="true" aria-labelledby="composer-title">
@@ -49,21 +50,23 @@
     <button class="add-tip-button" type="submit"><span>Add Tip</span><span>→</span></button>
   </form>
 </section>
+{% endif %}
+
 <script>
 (() => {
-  const body=document.body, composer=document.getElementById('tip-composer');
-  if(!composer) return;
-  const modalInput=composer.querySelector('.tip-input');
+  const body=document.body;
+  const composer=document.getElementById('tip-composer');
   const quickInput=document.getElementById('quick-tip-input');
 
   const open=()=>{
     if(quickInput){
       quickInput.scrollIntoView({behavior:'smooth',block:'center'});
-      setTimeout(()=>quickInput.focus(),180);
+      setTimeout(()=>quickInput.focus(),220);
       return;
     }
+    if(!composer) return;
     body.classList.add('composer-open');
-    setTimeout(()=>modalInput.focus(),180);
+    setTimeout(()=>composer.querySelector('.tip-input').focus(),180);
   };
   const close=()=>body.classList.remove('composer-open');
 
@@ -76,6 +79,7 @@
   if(location.pathname==='/add') open();
 })();
 </script>
-{% endif %}
 {% block scripts %}{% endblock %}
-</body></html>
+{% endif %}
+</body>
+</html>
