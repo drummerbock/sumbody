@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -66,6 +66,7 @@ def create_app():
         "DATABASE_URL", "sqlite:///" + str(Path(app.instance_path) / "sumbody.db")
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SUPER_ADMIN_EMAIL"] = os.environ.get("SUPER_ADMIN_EMAIL", "").strip().lower()
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = True
@@ -80,6 +81,18 @@ def create_app():
 
     def local_today():
         return datetime.now(app_tz).date()
+
+    def current_user_is_super_admin():
+        admin_email = app.config["SUPER_ADMIN_EMAIL"]
+        return bool(
+            current_user.is_authenticated
+            and admin_email
+            and current_user.email.lower() == admin_email
+        )
+
+    def require_super_admin():
+        if not current_user_is_super_admin():
+            abort(403)
 
     db.init_app(app)
     csrf.init_app(app)
@@ -104,7 +117,7 @@ def create_app():
 
     @app.context_processor
     def globals():
-        context = {"today": local_today(), "composer_areas": []}
+        context = {"today": local_today(), "composer_areas": [], "is_super_admin": current_user_is_super_admin()}
         if current_user.is_authenticated:
             context["composer_areas"] = LifeArea.query.filter_by(
                 user_id=current_user.id, active=True
@@ -422,6 +435,76 @@ def create_app():
     def logout():
         logout_user()
         return redirect(url_for("login"))
+
+    @app.route("/admin")
+    @login_required
+    def admin_dashboard():
+        require_super_admin()
+
+        users = User.query.order_by(User.created_at.desc()).all()
+        user_rows = []
+        for user in users:
+            beat_count = SumEntry.query.filter_by(
+                user_id=user.id, archived=False
+            ).count()
+            active_area_count = LifeArea.query.filter_by(
+                user_id=user.id, active=True
+            ).count()
+            last_activity = db.session.query(
+                func.max(SumEntry.logged_at)
+            ).filter(SumEntry.user_id == user.id).scalar()
+            user_rows.append({
+                "user": user,
+                "beat_count": beat_count,
+                "active_area_count": active_area_count,
+                "last_activity": last_activity,
+            })
+
+        return render_template(
+            "admin.html",
+            user_rows=user_rows,
+            total_users=len(user_rows),
+            total_beats=SumEntry.query.filter_by(archived=False).count(),
+        )
+
+    @app.route("/admin/users/<int:user_id>")
+    @login_required
+    def admin_user(user_id):
+        require_super_admin()
+
+        user = User.query.get_or_404(user_id)
+        beat_count = SumEntry.query.filter_by(
+            user_id=user.id, archived=False
+        ).count()
+        archived_beat_count = SumEntry.query.filter_by(
+            user_id=user.id, archived=True
+        ).count()
+        total_value = db.session.query(
+            func.coalesce(func.sum(SumEntry.value), 0)
+        ).filter(
+            SumEntry.user_id == user.id,
+            SumEntry.archived.is_(False),
+        ).scalar()
+        active_area_count = LifeArea.query.filter_by(
+            user_id=user.id, active=True
+        ).count()
+        rhythmos_count = Goal.query.filter_by(
+            user_id=user.id, active=True
+        ).count()
+        last_activity = db.session.query(
+            func.max(SumEntry.logged_at)
+        ).filter(SumEntry.user_id == user.id).scalar()
+
+        return render_template(
+            "admin_user.html",
+            viewed_user=user,
+            beat_count=beat_count,
+            archived_beat_count=archived_beat_count,
+            total_value=total_value,
+            active_area_count=active_area_count,
+            rhythmos_count=rhythmos_count,
+            last_activity=last_activity,
+        )
 
     @app.cli.command("create-user")
     def create_user():
