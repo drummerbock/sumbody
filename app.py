@@ -19,7 +19,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    name = db.Column(db.String(120), nullable=False, default="SUMbody")
+    name = db.Column(db.String(120), nullable=False, default="Becoming the Heartbeat")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class LifeArea(db.Model):
@@ -200,7 +200,7 @@ def create_app():
                     today_value=today_value,
                 )
 
-            flash("SUM added.", "success")
+            flash("Beat added.", "success")
             return redirect(url_for("home"))
         return render_template("add.html", areas=areas)
 
@@ -316,7 +316,7 @@ def create_app():
         ).first_or_404()
         entry.archived = not entry.archived
         db.session.commit()
-        flash("Tip restored." if not entry.archived else "Tip archived.", "success")
+        flash("Beat restored." if not entry.archived else "Beat archived.", "success")
         return redirect(request.referrer or url_for("history"))
 
     @app.route("/goals", methods=["GET", "POST"])
@@ -342,7 +342,7 @@ def create_app():
                     target=target,
                 ))
                 db.session.commit()
-                flash("Goal added.", "success")
+                flash("Rhythmos added.", "success")
             return redirect(url_for("goals"))
         user_goals = Goal.query.filter_by(user_id=current_user.id).order_by(
             Goal.active.desc(), Goal.created_at.desc()
@@ -383,7 +383,7 @@ def create_app():
     def create_user():
         import getpass
         email = input("Email: ").strip().lower()
-        name = input("Name: ").strip() or "SUMbody"
+        name = input("Name: ").strip() or "Becoming the Heartbeat"
         password = getpass.getpass("Password: ")
         if User.query.filter_by(email=email).first():
             print("User exists.")
