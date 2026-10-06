@@ -6,6 +6,12 @@ The practical companion to *Becoming the Heartbeat*: establish intentional rhyth
 
 Product language: Beats are individual meaningful actions; Today's Tempo is the present-day view; Rhythmos are rhythms the user intends to establish; Audify reveals the rhythm accumulated Beats actually create.
 
+## Account & onboarding architecture
+
+Self-service registration creates a user-scoped account and first-run onboarding. Existing domain models remain user-scoped. The web UI is intentionally kept separate from the underlying account/data model so a future native iOS client can consume the same conceptual domain through an API rather than requiring a rewrite of user data.
+
+This is App-Store-ready **direction**, not App Store submission infrastructure yet: production-scale database, API/auth tokens, email verification/recovery, privacy controls, subscriptions, and native iOS packaging remain future layers.
+
 ## v1
 
 - Fast mobile-first Beat entry
