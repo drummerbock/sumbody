@@ -7,7 +7,7 @@
   <title>{% block title %}SUMbody{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
 </head>
-<body>
+<body class="{{ 'home-page' if request.endpoint == 'home' else '' }}">
 <header class="topbar">
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
   {% if current_user.is_authenticated %}
@@ -38,7 +38,7 @@
     <div class="composer-label">How much did it matter?</div>
     <div class="impact-row">
       {% for n in range(1,6) %}
-      <label class="impact-choice"><input type="radio" name="value" value="{{n}}" required><span>{{n}}</span></label>
+      <label class="impact-choice"><input type="radio" name="value" value="{{n}}" required {% if n == 1 %}checked{% endif %}><span>{{n}}</span></label>
       {% endfor %}
     </div>
     <div class="composer-options">
@@ -52,9 +52,20 @@
 (() => {
   const body=document.body, composer=document.getElementById('tip-composer');
   if(!composer) return;
-  const input=composer.querySelector('.tip-input');
-  const open=()=>{body.classList.add('composer-open');setTimeout(()=>input.focus(),180)};
+  const modalInput=composer.querySelector('.tip-input');
+  const quickInput=document.getElementById('quick-tip-input');
+
+  const open=()=>{
+    if(quickInput){
+      quickInput.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(()=>quickInput.focus(),180);
+      return;
+    }
+    body.classList.add('composer-open');
+    setTimeout(()=>modalInput.focus(),180);
+  };
   const close=()=>body.classList.remove('composer-open');
+
   document.querySelectorAll('[data-open-composer]').forEach(x=>x.addEventListener('click',open));
   document.querySelectorAll('[data-close-composer]').forEach(x=>x.addEventListener('click',close));
   document.addEventListener('keydown',e=>{
@@ -65,4 +76,5 @@
 })();
 </script>
 {% endif %}
+{% block scripts %}{% endblock %}
 </body></html>
