@@ -39,6 +39,17 @@ class SumEntry(db.Model):
     occurred_on = db.Column(db.Date, nullable=False, index=True)
     logged_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     legacy_timestamp = db.Column(db.String(80), nullable=True)
+    archived = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    life_area = db.relationship("LifeArea")
+
+class Goal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    life_area_id = db.Column(db.Integer, db.ForeignKey("life_area.id"), nullable=False, index=True)
+    intention = db.Column(db.String(240), nullable=False)
+    target = db.Column(db.String(120), nullable=True)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     life_area = db.relationship("LifeArea")
 
 def create_app():
@@ -74,6 +85,11 @@ def create_app():
     login_manager.init_app(app)
     with app.app_context():
         db.create_all()
+        # Lightweight SQLite migrations for existing installations.
+        columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(sum_entry)"))}
+        if "archived" not in columns:
+            db.session.execute(db.text("ALTER TABLE sum_entry ADD COLUMN archived BOOLEAN NOT NULL DEFAULT 0"))
+            db.session.commit()
 
     @app.context_processor
     def globals():
@@ -91,16 +107,16 @@ def create_app():
         yesterday = today - timedelta(days=1)
 
         def totals(day):
-            q = SumEntry.query.filter_by(user_id=current_user.id, occurred_on=day)
+            q = SumEntry.query.filter_by(user_id=current_user.id, occurred_on=day, archived=False)
             value = db.session.query(func.coalesce(func.sum(SumEntry.value), 0)).filter_by(
-                user_id=current_user.id, occurred_on=day
+                user_id=current_user.id, occurred_on=day, archived=False
             ).scalar()
             return q.count(), value
 
         today_count, today_value = totals(today)
         yesterday_count, yesterday_value = totals(yesterday)
         recent = SumEntry.query.filter_by(
-            user_id=current_user.id, occurred_on=today
+            user_id=current_user.id, occurred_on=today, archived=False
         ).order_by(SumEntry.logged_at.desc()).limit(8).all()
         return render_template(
             "home.html",
@@ -152,7 +168,8 @@ def create_app():
     @app.route("/history")
     @login_required
     def history():
-        q = SumEntry.query.filter_by(user_id=current_user.id)
+        archived_view = request.args.get("archived") == "1"
+        q = SumEntry.query.filter_by(user_id=current_user.id, archived=archived_view)
         search = request.args.get("q", "").strip()
         area = request.args.get("area", type=int)
         start = request.args.get("start", "")
@@ -186,12 +203,13 @@ def create_app():
             total_count=total_count,
             total_value=total_value,
             areas=areas,
+            archived_view=archived_view,
         )
 
     @app.route("/insights")
     @login_required
     def insights():
-        entries = SumEntry.query.filter_by(user_id=current_user.id).all()
+        entries = SumEntry.query.filter_by(user_id=current_user.id, archived=False).all()
         total_count = len(entries)
         total_value = sum(e.value for e in entries)
         by_area = db.session.query(
@@ -199,13 +217,14 @@ def create_app():
             func.count(SumEntry.id),
             func.coalesce(func.sum(SumEntry.value), 0),
         ).join(SumEntry).filter(
-            SumEntry.user_id == current_user.id
+            SumEntry.user_id == current_user.id,
+            SumEntry.archived.is_(False),
         ).group_by(LifeArea.id).order_by(func.sum(SumEntry.value).desc()).all()
         days = db.session.query(
             SumEntry.occurred_on,
             func.count(SumEntry.id),
             func.sum(SumEntry.value),
-        ).filter_by(user_id=current_user.id).group_by(SumEntry.occurred_on).all()
+        ).filter_by(user_id=current_user.id, archived=False).group_by(SumEntry.occurred_on).all()
         most_active = max(days, key=lambda x: x[1]) if days else None
         highest_value = max(days, key=lambda x: x[2]) if days else None
         communicated = sum(1 for e in entries if e.communicated is True)
@@ -250,16 +269,54 @@ def create_app():
         db.session.commit()
         return redirect(url_for("areas"))
 
-    @app.post("/sum/<int:entry_id>/delete")
+    @app.post("/sum/<int:entry_id>/toggle-archive")
     @login_required
-    def delete_sum(entry_id):
+    def toggle_sum_archive(entry_id):
         entry = SumEntry.query.filter_by(
             id=entry_id, user_id=current_user.id
         ).first_or_404()
-        db.session.delete(entry)
+        entry.archived = not entry.archived
         db.session.commit()
-        flash("SUM deleted.", "success")
+        flash("Tip restored." if not entry.archived else "Tip archived.", "success")
         return redirect(request.referrer or url_for("history"))
+
+    @app.route("/goals", methods=["GET", "POST"])
+    @login_required
+    def goals():
+        active_areas = LifeArea.query.filter_by(
+            user_id=current_user.id, active=True
+        ).order_by(LifeArea.name).all()
+        if request.method == "POST":
+            intention = request.form.get("intention", "").strip()
+            target = request.form.get("target", "").strip() or None
+            area_id = request.form.get("life_area_id", type=int)
+            area = LifeArea.query.filter_by(
+                id=area_id, user_id=current_user.id, active=True
+            ).first()
+            if not intention or not area:
+                flash("Choose a Life Area and write your intention.", "error")
+            else:
+                db.session.add(Goal(
+                    user_id=current_user.id,
+                    life_area_id=area.id,
+                    intention=intention,
+                    target=target,
+                ))
+                db.session.commit()
+                flash("Goal added.", "success")
+            return redirect(url_for("goals"))
+        user_goals = Goal.query.filter_by(user_id=current_user.id).order_by(
+            Goal.active.desc(), Goal.created_at.desc()
+        ).all()
+        return render_template("goals.html", goals=user_goals, areas=active_areas)
+
+    @app.post("/goals/<int:goal_id>/toggle")
+    @login_required
+    def toggle_goal(goal_id):
+        goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first_or_404()
+        goal.active = not goal.active
+        db.session.commit()
+        return redirect(url_for("goals"))
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
