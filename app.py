@@ -352,7 +352,7 @@ def create_app():
         user_goals = Goal.query.filter_by(user_id=current_user.id).order_by(
             Goal.active.desc(), Goal.created_at.desc()
         ).all()
-        return render_template("goals.html", goals=user_goals, areas=active_areas)
+        return render_template("goals.html", goals=user_goals, areas=active_areas, all_areas=LifeArea.query.filter_by(user_id=current_user.id).order_by(LifeArea.active.desc(), LifeArea.name).all())
 
     @app.post("/goals/<int:goal_id>/toggle")
     @login_required
