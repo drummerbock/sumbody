@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-bth-rebrand') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261006-onboarding') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -19,6 +19,7 @@
     <a class="{{'active' if request.endpoint in ['areas','toggle_area'] else ''}}" href="{{url_for('areas')}}">Life Areas</a>
   </nav>
   <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Beat</button>
+  <a class="help-link" href="{{url_for('onboarding')}}">How it works</a>
   {% endif %}
 </header>
 
