@@ -147,6 +147,16 @@
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (!input.value.trim()) {
+      input.focus();
+      return;
+    }
+    if (!form.querySelector('input[name="life_area_id"]:checked')) {
+      status.className = 'rapid-status error';
+      status.textContent = 'Choose a Life Area once, then keep going.';
+      input.focus();
+      return;
+    }
     if (!form.reportValidity()) return;
 
     send.disabled = true;
