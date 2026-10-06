@@ -1,15 +1,17 @@
-# SUMbody
+# Becoming the Heartbeat
 
-**The little things add up.**
+**I am Becoming the Heartbeat.**
 
-SUMbody is a personal value journal: record what you did, where in your life you added value, and how much value you believe it created. Over time, thousands of small contributions become a visible story.
+The practical companion to *Becoming the Heartbeat*: establish intentional rhythms, record the meaningful actions that create them, and make the resulting patterns perceptible.
+
+Product language: Beats are individual meaningful actions; Today's Tempo is the present-day view; Rhythmos are rhythms the user intends to establish; Audify reveals the rhythm accumulated Beats actually create.
 
 ## v1
 
-- Fast mobile-first SUM entry
+- Fast mobile-first Beat entry
 - Today vs. yesterday
 - User-defined Life Areas with archival
-- Explore/search by text, Life Area, and date
+- Audify/search by text, Life Area, and date
 - Activity and impact insights
 - Communication tracking
 - Historical workbook importer
@@ -41,4 +43,4 @@ The importer reads `Form Responses 1`, creates historical Life Areas as needed, 
 
 Designed for Gunicorn behind DreamHost/nginx/Apache proxying to a local application port. Production secrets and the SQLite database live on the server and are excluded from Git.
 
-Production target: `sumbody.cameronjbock.com`
+Production target: `iam.becomingtheheartbeat.com`
