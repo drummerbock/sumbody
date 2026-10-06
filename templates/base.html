@@ -22,6 +22,7 @@
 {% if current_user.is_authenticated %}
 <button class="fab" type="button" data-open-composer aria-label="Add a tip">+</button>
 <footer><a href="{{url_for('home')}}">Today</a><a href="{{url_for('history')}}">Explore</a><a href="{{url_for('goals')}}">Goals</a><span class="footer-gap"></span><a href="{{url_for('insights')}}">Insights</a><a href="{{url_for('areas')}}">Areas</a></footer>
+{% if request.endpoint != 'home' %}
 <div class="composer-backdrop" data-close-composer></div>
 <section class="composer" id="tip-composer" role="dialog" aria-modal="true" aria-labelledby="composer-title">
   <div class="composer-handle"></div>
