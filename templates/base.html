@@ -7,7 +7,7 @@
   <title>{% block title %}SUMbody{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
 </head>
-<body>
+<body class="{{ 'home-page' if request.endpoint == 'home' else '' }}">
 <header class="topbar">
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
   {% if current_user.is_authenticated %}
@@ -19,6 +19,7 @@
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash {{category}}">{{message}}</div>{% endfor %}{% endwith %}
 {% block content %}{% endblock %}
 </main>
+
 {% if current_user.is_authenticated %}
 <button class="fab" type="button" data-open-composer aria-label="Add a tip">+</button>
 <footer><a href="{{url_for('home')}}">Today</a><a href="{{url_for('history')}}">Explore</a><a href="{{url_for('goals')}}">Goals</a><span class="footer-gap"></span><a href="{{url_for('insights')}}">Insights</a><a href="{{url_for('areas')}}">Areas</a></footer>
@@ -61,7 +62,7 @@
   const open=()=>{
     if(quickInput){
       quickInput.scrollIntoView({behavior:'smooth',block:'center'});
-      setTimeout(()=>quickInput.focus(),220);
+      setTimeout(()=>quickInput.focus(),180);
       return;
     }
     if(!composer) return;
