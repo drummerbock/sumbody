@@ -7,7 +7,7 @@
   <title>{% block title %}SUMbody{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
 </head>
-<body class="{{ 'home-page' if request.endpoint == 'home' else '' }}">
+<body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
   {% if current_user.is_authenticated %}
@@ -15,71 +15,216 @@
   <button class="quick-add desktop-add" type="button" data-open-composer>+ Add Tip</button>
   {% endif %}
 </header>
+
 <main>
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash {{category}}">{{message}}</div>{% endfor %}{% endwith %}
 {% block content %}{% endblock %}
 </main>
 
 {% if current_user.is_authenticated %}
-<button class="fab" type="button" data-open-composer aria-label="Add a tip">+</button>
-<footer><a href="{{url_for('home')}}">Today</a><a href="{{url_for('history')}}">Explore</a><a href="{{url_for('goals')}}">Goals</a><span class="footer-gap"></span><a href="{{url_for('insights')}}">Insights</a><a href="{{url_for('areas')}}">Areas</a></footer>
+<footer>
+  <a href="{{url_for('home')}}">Today</a>
+  <a href="{{url_for('history')}}">Explore</a>
+  <a href="{{url_for('goals')}}">Goals</a>
+  <a href="{{url_for('insights')}}">Insights</a>
+  <a href="{{url_for('areas')}}">Areas</a>
+</footer>
 
-{% if request.endpoint != 'home' %}
-<div class="composer-backdrop" data-close-composer></div>
-<section class="composer" id="tip-composer" role="dialog" aria-modal="true" aria-labelledby="composer-title">
-  <div class="composer-handle"></div>
-  <div class="composer-head"><div><div class="eyebrow">ADD A TIP</div><h2 id="composer-title">What did you add?</h2></div><button class="icon-button" type="button" data-close-composer aria-label="Close">×</button></div>
-  <form method="post" action="{{url_for('add_sum')}}" class="tip-form" id="tip-form">
+<section class="quick-composer" aria-label="Quick Tip composer">
+  <form method="post" action="{{url_for('add_sum')}}" id="quick-tip-form" data-today="{{today.isoformat()}}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <textarea class="tip-input" name="description" rows="2" required placeholder="I helped, made, practiced, fixed, cared for…"></textarea>
-    <div class="composer-label">Where?</div>
-    <div class="area-chips">
-      {% for a in composer_areas %}
-      <label class="choice-chip"><input type="radio" name="life_area_id" value="{{a.id}}" required><span>{{a.name}}</span></label>
-      {% endfor %}
+    <div class="quick-tip-line">
+      <textarea id="quick-tip-input" name="description" rows="1" required enterkeyhint="send" aria-label="What did you do?" placeholder="{{ 'What else happened?' if recent is defined and recent else 'What did you do?' }}"></textarea>
+      <button class="quick-send" type="submit" aria-label="Add Tip">↑</button>
     </div>
-    <div class="composer-label">How much did it matter?</div>
-    <div class="impact-row">
-      {% for n in range(1,6) %}
-      <label class="impact-choice"><input type="radio" name="value" value="{{n}}" required {% if n == 1 %}checked{% endif %}><span>{{n}}</span></label>
-      {% endfor %}
+
+    <div class="quick-controls">
+      <div class="quick-control-group quick-area-group">
+        <span class="quick-control-label">Life Area</span>
+        <div class="quick-area-chips">
+          {% for a in composer_areas %}
+          <label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}" required><span>{{a.name}}</span></label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="quick-control-group quick-value-group">
+        <span class="quick-control-label">SUM</span>
+        <div class="quick-value-chips" aria-label="Tip value">
+          {% for n in range(1,6) %}
+          <label class="quick-value"><input type="radio" name="value" value="{{n}}" {% if n == 1 %}checked{% endif %}><span>+{{n}}</span></label>
+          {% endfor %}
+        </div>
+      </div>
     </div>
-    <div class="composer-options">
-      <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
-      <details><summary>Change date</summary><input type="date" name="occurred_on" value="{{today.isoformat()}}" required></details>
+
+    <div class="quick-meta">
+      <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
+      <details>
+        <summary>More</summary>
+        <div class="quick-more">
+          <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
+          <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
+        </div>
+      </details>
+      <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
-    <button class="add-tip-button" type="submit"><span>Add Tip</span><span>→</span></button>
   </form>
 </section>
-{% endif %}
 
 <script>
 (() => {
-  const body=document.body;
-  const composer=document.getElementById('tip-composer');
-  const quickInput=document.getElementById('quick-tip-input');
+  const form = document.getElementById('quick-tip-form');
+  if (!form) return;
 
-  const open=()=>{
-    if(quickInput){
-      quickInput.focus();
+  const composer = form.closest('.quick-composer');
+  const input = document.getElementById('quick-tip-input');
+  const send = form.querySelector('.quick-send');
+  const status = document.getElementById('rapid-status');
+  const count = document.getElementById('today-tip-count');
+  const sum = document.getElementById('today-sum-value');
+  const entries = document.getElementById('today-entries');
+  const empty = document.getElementById('today-empty');
+  const csrf = form.querySelector('input[name="csrf_token"]').value;
+  const today = form.dataset.today;
+
+  const sizeInput = () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 112) + 'px';
+  };
+
+  const addEntryToLedger = (entry) => {
+    if (!entries) return;
+
+    const article = document.createElement('article');
+    article.className = 'entry rapid-entry';
+
+    const copy = document.createElement('div');
+    copy.className = 'entry-copy';
+    const description = document.createElement('b');
+    description.textContent = entry.description;
+    const area = document.createElement('span');
+    area.textContent = entry.life_area;
+    copy.append(description, area);
+
+    const actions = document.createElement('div');
+    actions.className = 'entry-actions';
+    const value = document.createElement('span');
+    value.className = 'value';
+    value.textContent = '+' + entry.value;
+
+    const archiveForm = document.createElement('form');
+    archiveForm.method = 'post';
+    archiveForm.action = '/sum/' + entry.id + '/toggle-archive';
+    const token = document.createElement('input');
+    token.type = 'hidden';
+    token.name = 'csrf_token';
+    token.value = csrf;
+    const archive = document.createElement('button');
+    archive.type = 'submit';
+    archive.className = 'archive-button';
+    archive.textContent = 'Archive';
+    archiveForm.append(token, archive);
+
+    actions.append(value, archiveForm);
+    article.append(copy, actions);
+    entries.prepend(article);
+    if (empty) empty.hidden = true;
+  };
+
+  const activateComposer = () => composer.classList.add('is-active');
+
+  input.addEventListener('focus', activateComposer);
+  input.addEventListener('input', () => {
+    activateComposer();
+    sizeInput();
+  });
+  form.addEventListener('pointerdown', activateComposer);
+
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  document.querySelectorAll('[data-open-composer]').forEach((button) => {
+    button.addEventListener('click', () => input.focus());
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if ((event.key === 'n' || event.key === 'N') && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+      event.preventDefault();
+      input.focus();
+    }
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!input.value.trim()) {
+      input.focus();
       return;
     }
-    if(!composer) return;
-    body.classList.add('composer-open');
-    setTimeout(()=>composer.querySelector('.tip-input').focus(),180);
-  };
-  const close=()=>body.classList.remove('composer-open');
 
-  document.querySelectorAll('[data-open-composer]').forEach(x=>x.addEventListener('click',open));
-  document.querySelectorAll('[data-close-composer]').forEach(x=>x.addEventListener('click',close));
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape') close();
-    if((e.key==='n'||e.key==='N')&&!body.classList.contains('composer-open')&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){e.preventDefault();open();}
+    if (!form.querySelector('input[name="life_area_id"]:checked')) {
+      status.className = 'rapid-status error';
+      status.textContent = 'Choose a Life Area once, then keep going.';
+      activateComposer();
+      return;
+    }
+
+    if (!form.reportValidity()) return;
+
+    send.disabled = true;
+    status.className = 'rapid-status';
+    status.textContent = 'Adding…';
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Could not add that Tip.');
+
+      if (count) count.textContent = data.today_count;
+      if (sum) sum.textContent = data.today_value;
+      if (data.entry.occurred_on === today) addEntryToLedger(data.entry);
+
+      input.value = '';
+      input.placeholder = 'What else happened?';
+      input.style.height = 'auto';
+
+      const one = form.querySelector('input[name="value"][value="1"]');
+      if (one) one.checked = true;
+      const shared = form.querySelector('input[name="communicated"]');
+      if (shared) shared.checked = false;
+      const date = form.querySelector('input[name="occurred_on"]');
+      if (date) date.value = today;
+
+      status.className = 'rapid-status success';
+      status.textContent = 'Added · ' + data.entry.life_area + ' · +' + data.entry.value;
+      input.focus();
+    } catch (error) {
+      status.className = 'rapid-status error';
+      status.textContent = error.message || 'Could not add that Tip.';
+      input.focus();
+    } finally {
+      send.disabled = false;
+    }
   });
-  if(location.pathname==='/add') open();
+
+  if (location.pathname === '/add') input.focus();
+  sizeInput();
 })();
 </script>
 {% endif %}
+
 {% block scripts %}{% endblock %}
 </body>
 </html>
