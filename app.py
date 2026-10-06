@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -133,23 +133,31 @@ def create_app():
         areas = LifeArea.query.filter_by(
             user_id=current_user.id, active=True
         ).order_by(LifeArea.name).all()
+        wants_json = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+        def invalid(message):
+            if wants_json:
+                return jsonify(ok=False, error=message), 400
+            flash(message, "error")
+            return render_template("add.html", areas=areas)
+
         if request.method == "POST":
             description = request.form.get("description", "").strip()
             try:
-                value = int(request.form.get("value", ""))
+                value = int(request.form.get("value", "1"))
                 area_id = int(request.form.get("life_area_id", ""))
                 occurred_on = datetime.strptime(
                     request.form.get("occurred_on", ""), "%Y-%m-%d"
                 ).date()
             except (ValueError, TypeError):
-                flash("Please complete all fields.", "error")
-                return render_template("add.html", areas=areas)
+                return invalid("Please complete all fields.")
+
             area = LifeArea.query.filter_by(
                 id=area_id, user_id=current_user.id, active=True
             ).first()
             if not description or not area or value not in range(1, 6):
-                flash("Please complete all fields.", "error")
-                return render_template("add.html", areas=areas)
+                return invalid("Please complete all fields.")
+
             comm = request.form.get("communicated")
             entry = SumEntry(
                 user_id=current_user.id,
@@ -161,6 +169,31 @@ def create_app():
             )
             db.session.add(entry)
             db.session.commit()
+
+            if wants_json:
+                today = local_today()
+                today_count = SumEntry.query.filter_by(
+                    user_id=current_user.id, occurred_on=today, archived=False
+                ).count()
+                today_value = db.session.query(
+                    func.coalesce(func.sum(SumEntry.value), 0)
+                ).filter_by(
+                    user_id=current_user.id, occurred_on=today, archived=False
+                ).scalar()
+                return jsonify(
+                    ok=True,
+                    entry={
+                        "id": entry.id,
+                        "description": entry.description,
+                        "life_area": area.name,
+                        "life_area_id": area.id,
+                        "value": entry.value,
+                        "occurred_on": entry.occurred_on.isoformat(),
+                    },
+                    today_count=today_count,
+                    today_value=today_value,
+                )
+
             flash("SUM added.", "success")
             return redirect(url_for("home"))
         return render_template("add.html", areas=areas)

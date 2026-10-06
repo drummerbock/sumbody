@@ -10,3 +10,58 @@
 @media(max-width:700px){footer{grid-template-columns:1fr 1fr 1fr 70px 1fr 1fr}.entry-actions{gap:8px}.archive-button,.restore-button{padding:6px 8px}.goal-composer{grid-template-columns:1fr;margin-top:25px}.goal-row{align-items:flex-start}.goal-row b{font-size:19px}}
 
 .archived-entry{opacity:.52}.archived-entry .value{color:var(--muted)}
+
+
+/* Persistent Rapid Fire composer */
+.home-page main{padding-bottom:230px}
+.quick-composer{position:fixed;left:50%;bottom:22px;z-index:18;width:min(760px,calc(100% - 36px));transform:translateX(-50%);background:#171a18f2;border:1px solid #ffffff1a;border-radius:20px;box-shadow:0 18px 60px #0009;backdrop-filter:blur(16px);padding:10px}
+.quick-tip-line{display:flex;align-items:flex-end;gap:9px}
+.quick-tip-line textarea{min-height:48px;max-height:112px;resize:none;overflow-y:auto;border:0;background:transparent;border-radius:13px;padding:12px 13px;font-family:Georgia,serif;font-size:21px;line-height:1.25}
+.quick-tip-line textarea:focus{box-shadow:none;border:0}
+.quick-tip-line textarea::placeholder{color:#737a73}
+.quick-send{flex:0 0 48px;width:48px;height:48px;border:0;border-radius:14px;background:var(--gold);color:#17140d;font-size:25px;font-weight:900;cursor:pointer;transition:transform .15s,background .15s,opacity .15s}
+.quick-send:hover{background:var(--gold2);transform:translateY(-1px)}
+.quick-send:disabled{opacity:.55;cursor:wait;transform:none}
+.quick-controls,.quick-meta{max-height:0;opacity:0;overflow:hidden;pointer-events:none;transition:max-height .24s ease,opacity .18s ease,margin .24s ease}
+.quick-composer:focus-within .quick-controls{max-height:150px;opacity:1;pointer-events:auto;margin-top:10px}
+.quick-composer:focus-within .quick-meta{max-height:100px;opacity:1;pointer-events:auto;margin-top:8px}
+.quick-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:0 4px}
+.quick-control-group{min-width:0}
+.quick-control-label{display:block;margin-bottom:6px;color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+.quick-area-chips,.quick-value-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.quick-area-chips::-webkit-scrollbar,.quick-value-chips::-webkit-scrollbar{display:none}
+.quick-choice,.quick-value{flex:0 0 auto}
+.quick-choice input,.quick-value input{position:absolute;opacity:0;pointer-events:none;width:auto}
+.quick-choice span,.quick-value span{display:block;border:1px solid var(--line);border-radius:999px;background:#111311;color:#b9c0b9;cursor:pointer;font-size:12px;font-weight:750;white-space:nowrap;transition:.15s}
+.quick-choice span{padding:7px 10px}
+.quick-value span{padding:7px 9px;font-family:Georgia,serif;font-size:14px}
+.quick-choice input:checked+span,.quick-value input:checked+span{border-color:var(--gold);background:#e8b65b18;color:var(--gold2)}
+.quick-meta{display:flex;align-items:center;gap:12px;padding:0 5px;color:var(--muted);font-size:11px}
+.rapid-hint{margin-right:auto}
+.quick-meta details{position:relative}
+.quick-meta summary{cursor:pointer;list-style:none;font-weight:750;color:#b9c0b9}
+.quick-more{position:absolute;right:0;bottom:26px;width:285px;display:grid;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#232724;box-shadow:0 16px 45px #0008}
+.quick-date{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
+.quick-date input{padding:8px;font-size:12px}
+.rapid-status{min-width:0;text-align:right;white-space:nowrap}
+.rapid-status.success{color:var(--mint)}
+.rapid-status.error{color:var(--danger)}
+.rapid-entry{animation:rapid-entry-in .28s ease both}
+@keyframes rapid-entry-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:700px){
+  .home-page main{padding-bottom:245px}
+  .home-page .fab{display:none}
+  .home-page footer{grid-template-columns:repeat(5,1fr)}
+  .home-page .footer-gap{display:none}
+  .quick-composer{bottom:78px;width:calc(100% - 20px);border-radius:18px;padding:8px}
+  .quick-tip-line textarea{font-size:19px;padding:11px;min-height:46px}
+  .quick-send{width:46px;height:46px;flex-basis:46px}
+  .quick-controls{grid-template-columns:1fr;gap:9px}
+  .quick-composer:focus-within .quick-controls{max-height:190px}
+  .quick-composer:focus-within .quick-meta{max-height:120px}
+  .quick-meta{flex-wrap:wrap;gap:7px 10px}
+  .rapid-hint{width:100%;margin:0}
+  .rapid-status{margin-left:auto}
+  .quick-more{right:-4px;width:min(285px,calc(100vw - 38px))}
+}

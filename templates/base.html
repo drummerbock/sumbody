@@ -7,7 +7,7 @@
   <title>{% block title %}SUMbody{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
 </head>
-<body>
+<body class="{{ 'home-page' if request.endpoint == 'home' else '' }}">
 <header class="topbar">
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="mark">Σ</span><span>SUMbody</span></a>
   {% if current_user.is_authenticated %}
@@ -19,9 +19,12 @@
 {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash {{category}}">{{message}}</div>{% endfor %}{% endwith %}
 {% block content %}{% endblock %}
 </main>
+
 {% if current_user.is_authenticated %}
 <button class="fab" type="button" data-open-composer aria-label="Add a tip">+</button>
 <footer><a href="{{url_for('home')}}">Today</a><a href="{{url_for('history')}}">Explore</a><a href="{{url_for('goals')}}">Goals</a><span class="footer-gap"></span><a href="{{url_for('insights')}}">Insights</a><a href="{{url_for('areas')}}">Areas</a></footer>
+
+{% if request.endpoint != 'home' %}
 <div class="composer-backdrop" data-close-composer></div>
 <section class="composer" id="tip-composer" role="dialog" aria-modal="true" aria-labelledby="composer-title">
   <div class="composer-handle"></div>
@@ -38,7 +41,7 @@
     <div class="composer-label">How much did it matter?</div>
     <div class="impact-row">
       {% for n in range(1,6) %}
-      <label class="impact-choice"><input type="radio" name="value" value="{{n}}" required><span>{{n}}</span></label>
+      <label class="impact-choice"><input type="radio" name="value" value="{{n}}" required {% if n == 1 %}checked{% endif %}><span>{{n}}</span></label>
       {% endfor %}
     </div>
     <div class="composer-options">
@@ -48,13 +51,25 @@
     <button class="add-tip-button" type="submit"><span>Add Tip</span><span>→</span></button>
   </form>
 </section>
+{% endif %}
+
 <script>
 (() => {
-  const body=document.body, composer=document.getElementById('tip-composer');
-  if(!composer) return;
-  const input=composer.querySelector('.tip-input');
-  const open=()=>{body.classList.add('composer-open');setTimeout(()=>input.focus(),180)};
+  const body=document.body;
+  const composer=document.getElementById('tip-composer');
+  const quickInput=document.getElementById('quick-tip-input');
+
+  const open=()=>{
+    if(quickInput){
+      quickInput.focus();
+      return;
+    }
+    if(!composer) return;
+    body.classList.add('composer-open');
+    setTimeout(()=>composer.querySelector('.tip-input').focus(),180);
+  };
   const close=()=>body.classList.remove('composer-open');
+
   document.querySelectorAll('[data-open-composer]').forEach(x=>x.addEventListener('click',open));
   document.querySelectorAll('[data-close-composer]').forEach(x=>x.addEventListener('click',close));
   document.addEventListener('keydown',e=>{
@@ -65,4 +80,6 @@
 })();
 </script>
 {% endif %}
-</body></html>
+{% block scripts %}{% endblock %}
+</body>
+</html>
