@@ -91,6 +91,12 @@ def create_app():
             db.session.execute(db.text("ALTER TABLE sum_entry ADD COLUMN archived BOOLEAN NOT NULL DEFAULT 0"))
             db.session.commit()
 
+    @app.after_request
+    def prevent_stale_html(response):
+        if response.content_type and response.content_type.startswith("text/html"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     @app.context_processor
     def globals():
         context = {"today": local_today(), "composer_areas": []}
