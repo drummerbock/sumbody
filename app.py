@@ -116,8 +116,8 @@ def create_app():
         today_count, today_value = totals(today)
         yesterday_count, yesterday_value = totals(yesterday)
         recent = SumEntry.query.filter_by(
-            user_id=current_user.id, occurred_on=today, archived=False
-        ).order_by(SumEntry.logged_at.desc()).limit(8).all()
+            user_id=current_user.id, occurred_on=today
+        ).order_by(SumEntry.archived.asc(), SumEntry.logged_at.desc()).all()
         return render_template(
             "home.html",
             today_count=today_count,

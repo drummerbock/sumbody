@@ -7,7 +7,7 @@
 </section>
 <section class="day-ledger">
   <div class="section-head"><div><div class="eyebrow">TODAY'S LEDGER</div><h2>The little things</h2></div><span>Yesterday · {{yesterday_count}} tips · SUM {{yesterday_value}}</span></div>
-  {% if recent %}<div class="entries">{% for e in recent %}<article class="entry"><div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}</span></div><div class="entry-actions"><span class="value">+{{e.value}}</span><form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="archive-button" type="submit">Archive</button></form></div></article>{% endfor %}</div>
+  {% if recent %}<div class="entries">{% for e in recent %}<article class="entry {{'archived-entry' if e.archived}}"><div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}{{' · Archived' if e.archived}}</span></div><div class="entry-actions"><span class="value">+{{e.value}}</span><form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'restore-button' if e.archived else 'archive-button'}}" type="submit">{{'Restore' if e.archived else 'Archive'}}</button></form></div></article>{% endfor %}</div>
   {% else %}<button class="empty empty-button" type="button" data-open-composer><span>+</span><b>Your first tip can be tiny.</b><small>Record one thing that added something to your day.</small></button>{% endif %}
 </section>
 {% endblock %}
