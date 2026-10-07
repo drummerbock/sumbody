@@ -7,7 +7,7 @@ from flask import Flask, abort, flash, jsonify, redirect, render_template, reque
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from sqlalchemy import func
+from sqlalchemy import case, func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
@@ -270,7 +270,7 @@ def create_app():
         by_area = db.session.query(
             LifeArea.name,
             func.count(SumEntry.id),
-            func.sum(db.case((SumEntry.accented.is_(True), 1), else_=0)),
+            func.sum(case((SumEntry.accented.is_(True), 1), else_=0)),
         ).join(SumEntry).filter(
             SumEntry.user_id == current_user.id,
             SumEntry.archived.is_(False),
@@ -278,7 +278,7 @@ def create_app():
         days = db.session.query(
             SumEntry.occurred_on,
             func.count(SumEntry.id),
-            func.sum(db.case((SumEntry.accented.is_(True), 1), else_=0)),
+            func.sum(case((SumEntry.accented.is_(True), 1), else_=0)),
         ).filter_by(user_id=current_user.id, archived=False).group_by(SumEntry.occurred_on).all()
         most_active = max(days, key=lambda x: x[1]) if days else None
         most_accented = max(days, key=lambda x: x[2] or 0) if days else None
