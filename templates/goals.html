@@ -1,6 +1,12 @@
 {% extends "base.html" %}{% block title %}Rhythmos · Becoming the Heartbeat{% endblock %}{% block content %}
 <div class="eyebrow">THE RHYTHM YOU INTEND TO CREATE</div><h1>Rhythmos</h1>
 <p class="lede">Rhythmos are the rhythms you intentionally want to establish or strengthen.</p>
+
+<section class="rhythmos-areas rhythmos-areas-top">
+  <div class="section-head"><div><div class="eyebrow">LIFE AREAS</div><h2>Where your movement lives</h2><p class="lede">Every Rhythmos begins in a Life Area — the part of your life where you want movement to take shape.</p></div><a class="secondary" href="{{url_for('areas')}}">Manage Life Areas</a></div>
+  <div class="area-summary">{% for a in all_areas %}<span class="area-pill {{'muted-area' if not a.active}}">{{a.name}}</span>{% endfor %}</div>
+</section>
+
 <form method="post" class="goal-composer card">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <label>Life Area<select name="life_area_id" required><option value="">Choose an area</option>{% for a in areas %}<option value="{{a.id}}">{{a.name}}</option>{% endfor %}</select></label>
@@ -8,11 +14,9 @@
 <label>Optional target<input name="target" maxlength="120" placeholder="e.g. 3 meaningful Beats each week"></label>
 <button class="primary">Add Rhythmos</button>
 </form>
-<section class="goals-list"><div class="section-head"><div><div class="eyebrow">YOUR RHYTHMOS</div><h2>The rhythms you're building</h2></div></div>
+
+<section class="goals-list"><div class="section-head"><div><div class="eyebrow">YOUR RHYTHMOS</div><h2>Where your pulse enters your movement</h2><p class="lede">Each Rhythmos gives one Life Area a direction you can keep returning to.</p></div></div>
 {% for g in goals %}<article class="goal-row {{'goal-archived' if not g.active}}"><div><span class="goal-area">{{g.life_area.name}}</span><b>{{g.intention}}</b>{% if g.target %}<small>{{g.target}}</small>{% endif %}</div><form method="post" action="{{url_for('toggle_goal',goal_id=g.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'archive-button' if g.active else 'restore-button'}}">{{'Archive' if g.active else 'Restore'}}</button></form></article>
-{% else %}<div class="empty">No Rhythmos yet. Choose one rhythm you want to establish.</div>{% endfor %}
+{% else %}<div class="empty">No Rhythmos yet. Choose a Life Area, then name one rhythm you want to strengthen.</div>{% endfor %}
 </section>
-<section class="rhythmos-areas">
-  <div class="section-head"><div><div class="eyebrow">LIFE AREAS</div><h2>Where your rhythm lives</h2><p class="lede">Life Areas are the parts of your life where you want to establish rhythm.</p></div><a class="secondary" href="{{url_for('areas')}}">Manage Life Areas</a></div>
-  <div class="area-summary">{% for a in all_areas %}<span class="area-pill {{'muted-area' if not a.active}}">{{a.name}}</span>{% endfor %}</div>
-</section>{% endblock %}
+{% endblock %}
