@@ -28,6 +28,7 @@ class LifeArea(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class SumEntry(db.Model):
@@ -108,6 +109,22 @@ def create_app():
         if "accented" not in columns:
             db.session.execute(db.text("ALTER TABLE sum_entry ADD COLUMN accented BOOLEAN NOT NULL DEFAULT 0"))
             db.session.commit()
+        life_area_columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(life_area)"))}
+        if "sort_order" not in life_area_columns:
+            db.session.execute(db.text("ALTER TABLE life_area ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0"))
+            # Preserve each user's current alphabetical presentation as the initial custom order.
+            user_ids = [row[0] for row in db.session.execute(db.text("SELECT DISTINCT user_id FROM life_area"))]
+            for user_id in user_ids:
+                area_ids = [row[0] for row in db.session.execute(
+                    db.text("SELECT id FROM life_area WHERE user_id = :uid ORDER BY name COLLATE NOCASE, id"),
+                    {"uid": user_id},
+                )]
+                for position, area_id in enumerate(area_ids):
+                    db.session.execute(
+                        db.text("UPDATE life_area SET sort_order = :position WHERE id = :area_id"),
+                        {"position": position, "area_id": area_id},
+                    )
+            db.session.commit()
         user_columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(user)"))}
         if "onboarding_complete" not in user_columns:
             db.session.execute(db.text("ALTER TABLE user ADD COLUMN onboarding_complete BOOLEAN NOT NULL DEFAULT 1"))
@@ -125,7 +142,7 @@ def create_app():
         if current_user.is_authenticated:
             context["composer_areas"] = LifeArea.query.filter_by(
                 user_id=current_user.id, active=True
-            ).order_by(LifeArea.name).all()
+            ).order_by(LifeArea.sort_order, LifeArea.name).all()
         return context
 
     @app.route("/")
@@ -157,7 +174,7 @@ def create_app():
     def add_sum():
         areas = LifeArea.query.filter_by(
             user_id=current_user.id, active=True
-        ).order_by(LifeArea.name).all()
+        ).order_by(LifeArea.sort_order, LifeArea.name).all()
         wants_json = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         def invalid(message):
@@ -253,7 +270,7 @@ def create_app():
         ).limit(500).all()
         areas = LifeArea.query.filter_by(
             user_id=current_user.id
-        ).order_by(LifeArea.name).all()
+        ).order_by(LifeArea.sort_order, LifeArea.name).all()
         return render_template(
             "history.html",
             entries=entries,
@@ -306,13 +323,16 @@ def create_app():
                 func.lower(LifeArea.name) == name.lower(),
                 LifeArea.user_id == current_user.id,
             ).first():
-                db.session.add(LifeArea(user_id=current_user.id, name=name))
+                next_order = db.session.query(func.coalesce(func.max(LifeArea.sort_order), -1)).filter_by(
+                    user_id=current_user.id
+                ).scalar() + 1
+                db.session.add(LifeArea(user_id=current_user.id, name=name, sort_order=next_order))
                 db.session.commit()
             return redirect(url_for("areas"))
         return render_template(
             "areas.html",
             areas=LifeArea.query.filter_by(user_id=current_user.id)
-            .order_by(LifeArea.active.desc(), LifeArea.name).all(),
+            .order_by(LifeArea.active.desc(), LifeArea.sort_order, LifeArea.name).all(),
         )
 
     @app.post("/areas/<int:area_id>/toggle")
@@ -323,6 +343,23 @@ def create_app():
         ).first_or_404()
         area.active = not area.active
         db.session.commit()
+        return redirect(url_for("areas"))
+
+    @app.post("/areas/<int:area_id>/move/<direction>")
+    @login_required
+    def move_area(area_id, direction):
+        if direction not in {"up", "down"}:
+            abort(400)
+        area = LifeArea.query.filter_by(id=area_id, user_id=current_user.id).first_or_404()
+        ordered = LifeArea.query.filter_by(user_id=current_user.id, active=area.active).order_by(
+            LifeArea.sort_order, LifeArea.name
+        ).all()
+        index = next((i for i, item in enumerate(ordered) if item.id == area.id), None)
+        target_index = index - 1 if direction == "up" else index + 1
+        if index is not None and 0 <= target_index < len(ordered):
+            other = ordered[target_index]
+            area.sort_order, other.sort_order = other.sort_order, area.sort_order
+            db.session.commit()
         return redirect(url_for("areas"))
 
     @app.post("/sum/<int:entry_id>/toggle-archive")
@@ -354,7 +391,7 @@ def create_app():
     def goals():
         active_areas = LifeArea.query.filter_by(
             user_id=current_user.id, active=True
-        ).order_by(LifeArea.name).all()
+        ).order_by(LifeArea.sort_order, LifeArea.name).all()
         if request.method == "POST":
             intention = request.form.get("intention", "").strip()
             target = request.form.get("target", "").strip() or None
