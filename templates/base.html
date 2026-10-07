@@ -65,6 +65,7 @@
 
     <div class="quick-meta">
       <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
+      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Accent</span></label>
       <details>
         <summary>More</summary>
         <div class="quick-more">
@@ -124,14 +125,14 @@
     accentToken.value = csrf;
     const accentButton = document.createElement('button');
     accentButton.type = 'submit';
-    accentButton.className = 'accent-button';
-    accentButton.setAttribute('aria-pressed', 'false');
+    accentButton.className = 'accent-button' + (entry.accented ? ' is-accented' : '');
+    accentButton.setAttribute('aria-pressed', entry.accented ? 'true' : 'false');
     const accentMark = document.createElement('span');
     accentMark.className = 'accent-mark';
     accentMark.textContent = '>';
     const accentLabel = document.createElement('span');
     accentLabel.className = 'accent-label';
-    accentLabel.textContent = 'Accent';
+    accentLabel.textContent = entry.accented ? 'Accented' : 'Accent';
     accentButton.append(accentMark, accentLabel);
     accentForm.append(accentToken, accentButton);
 
@@ -230,6 +231,8 @@
       input.placeholder = 'What else happened?';
       input.style.height = 'auto';
 
+      const initialAccent = form.querySelector('input[name="accented"]');
+      if (initialAccent) initialAccent.checked = false;
       const shared = form.querySelector('input[name="communicated"]');
       if (shared) shared.checked = false;
       const date = form.querySelector('input[name="occurred_on"]');
@@ -242,7 +245,8 @@
       const accent = document.createElement('button');
       accent.type = 'button';
       accent.className = 'rapid-accent';
-      accent.textContent = '> Accent this Beat';
+      accent.textContent = data.entry.accented ? '> Accented' : '> Accent this Beat';
+      accent.classList.toggle('is-accented', data.entry.accented);
       accent.addEventListener('click', async () => {
         accent.disabled = true;
         try {
