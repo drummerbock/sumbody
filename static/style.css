@@ -102,3 +102,16 @@ h1 em{color:var(--brand-red);font-weight:400}
 .life-area-examples-label{color:var(--muted);font-size:12px;font-weight:750}
 .life-area-note{margin:-8px 0 20px;color:var(--muted);font-size:12px}
 @media(max-width:700px){.rhythmos-areas-top .section-head{align-items:flex-start;gap:18px}.rhythmos-areas-top .section-head{flex-direction:column}.rhythmos-areas-top .secondary{align-self:flex-start}.life-area-examples{margin-top:22px}}
+
+
+/* Beat accents */
+.accent-form{margin:0}
+.accent-button,.rapid-accent{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:9px;padding:7px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:.15s}
+.accent-button{display:inline-flex;align-items:center;gap:6px}
+.accent-mark{font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:.7;transform:rotate(-18deg);display:inline-block}
+.accent-button:hover,.rapid-accent:hover{border-color:var(--brand-red);color:var(--ink)}
+.accent-button.is-accented,.rapid-accent.is-accented{border-color:var(--brand-red);background:#b5362b18;color:var(--ink)}
+.rapid-status.success{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.rapid-accent{padding:5px 8px;color:var(--mint)}
+.rapid-accent:disabled{opacity:.55;cursor:wait}
+@media(max-width:700px){.accent-label{display:none}.accent-button{padding:7px 9px}.rapid-status.success{width:100%;justify-content:flex-end}}
