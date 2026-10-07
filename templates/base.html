@@ -66,13 +66,11 @@
     <div class="quick-meta">
       <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
       <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Accent</span></label>
-      <details>
-        <summary>Details</summary>
-        <div class="quick-more">
-          <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
-          <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
-        </div>
-      </details>
+      <button class="details-toggle" id="details-toggle" type="button" aria-expanded="false" aria-controls="quick-details">Details</button>
+      <div class="quick-details" id="quick-details" hidden>
+        <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
+        <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
+      </div>
       <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
   </form>
@@ -93,6 +91,17 @@
   const empty = document.getElementById('today-empty');
   const csrf = form.querySelector('input[name="csrf_token"]').value;
   const today = form.dataset.today;
+  const detailsToggle = document.getElementById('details-toggle');
+  const detailsPanel = document.getElementById('quick-details');
+
+  if (detailsToggle && detailsPanel) {
+    detailsToggle.addEventListener('click', () => {
+      const opening = detailsPanel.hidden;
+      detailsPanel.hidden = !opening;
+      detailsToggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      composer.classList.toggle('details-open', opening);
+    });
+  }
 
   const sizeInput = () => {
     input.style.height = 'auto';
