@@ -6,14 +6,90 @@
 <div class="life-area-examples">
   <span class="life-area-examples-label">Custom Life Areas could be</span>
   <div class="area-summary">
-    <span class="area-pill">A hobby</span>
-    <span class="area-pill">A side hustle</span>
-    <span class="area-pill">One important relationship</span>
-    <span class="area-pill">A cause or nonprofit you support</span>
+    {% for example in ["A hobby", "A side hustle", "One important relationship", "A cause or nonprofit you support"] %}
+    <button class="area-pill area-example" type="button" data-example="{{example}}">{{example}}</button>
+    {% endfor %}
   </div>
 </div>
 
-<form method="post" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="name" required placeholder="New Life Area"><button>Add</button></form>
-<p class="life-area-note">Put Life Areas in the order that feels natural to you. This order is used throughout SUMbody. Archive one whenever you need to; its past Beats stay attached.</p>
-<div class="card">{% for a in areas %}<div class="area-row"><div><b>{{a.name}}</b><span>{{"Active" if a.active else "Archived"}}</span></div><div class="area-actions">{% if a.active %}<form method="post" action="{{url_for('move_area',area_id=a.id,direction='up')}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="reorder-button" type="submit" aria-label="Move {{a.name}} up">↑</button></form><form method="post" action="{{url_for('move_area',area_id=a.id,direction='down')}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="reorder-button" type="submit" aria-label="Move {{a.name}} down">↓</button></form>{% endif %}<form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'archive-button' if a.active else 'restore-button'}}">{{"Archive" if a.active else "Restore"}}</button></form></div></div>{% endfor %}</div>
+<form method="post" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input id="new-life-area" name="name" required placeholder="New Life Area"><button>Add</button></form>
+<p class="life-area-note">Drag to arrange your Life Areas.</p>
+
+<div class="life-area-list" id="life-area-list">
+{% for a in areas if a.active %}
+  <div class="life-area-item" draggable="true" data-area-id="{{a.id}}">
+    <button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">☰</button>
+    <strong>{{a.name}}</strong>
+    <form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="archive-button">Archive</button></form>
+  </div>
+{% endfor %}
+</div>
+
+{% set archived = areas|selectattr("active","equalto",false)|list %}
+{% if archived %}
+<details class="archived-areas">
+  <summary>Archived Life Areas <span>{{archived|length}}</span></summary>
+  <div class="life-area-list archived-list">
+  {% for a in archived %}
+    <div class="life-area-item">
+      <span class="drag-handle drag-placeholder">☰</span>
+      <strong>{{a.name}}</strong>
+      <form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="restore-button">Restore</button></form>
+    </div>
+  {% endfor %}
+  </div>
+</details>
+{% endif %}
+
+<script>
+(() => {
+  const input = document.getElementById('new-life-area');
+  document.querySelectorAll('.area-example').forEach(button => button.addEventListener('click', () => {
+    input.value = button.dataset.example;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }));
+
+  const list = document.getElementById('life-area-list');
+  if (!list) return;
+  let dragging = null;
+  const saveOrder = async () => {
+    const ids = [...list.querySelectorAll('.life-area-item')].map(item => Number(item.dataset.areaId));
+    await fetch('{{url_for("reorder_areas")}}', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token() }}','X-Requested-With':'XMLHttpRequest'},
+      body: JSON.stringify({ids})
+    });
+  };
+  list.querySelectorAll('.life-area-item').forEach(item => {
+    item.addEventListener('dragstart', () => { dragging = item; item.classList.add('is-dragging'); });
+    item.addEventListener('dragend', () => { item.classList.remove('is-dragging'); dragging = null; saveOrder(); });
+  });
+  list.addEventListener('dragover', event => {
+    event.preventDefault();
+    if (!dragging) return;
+    const items = [...list.querySelectorAll('.life-area-item:not(.is-dragging)')];
+    const after = items.find(item => event.clientY <= item.getBoundingClientRect().top + item.offsetHeight / 2);
+    if (after) list.insertBefore(dragging, after); else list.appendChild(dragging);
+  });
+
+  let touchItem = null;
+  list.querySelectorAll('.drag-handle').forEach(handle => {
+    handle.addEventListener('touchstart', event => { touchItem = handle.closest('.life-area-item'); touchItem.classList.add('is-dragging'); }, {passive:true});
+    handle.addEventListener('touchmove', event => {
+      if (!touchItem) return;
+      const touch = event.touches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.life-area-item');
+      if (target && target !== touchItem && target.parentElement === list) {
+        const box = target.getBoundingClientRect();
+        list.insertBefore(touchItem, touch.clientY < box.top + box.height / 2 ? target : target.nextSibling);
+      }
+    }, {passive:true});
+    handle.addEventListener('touchend', () => {
+      if (!touchItem) return;
+      touchItem.classList.remove('is-dragging'); touchItem = null; saveOrder();
+    });
+  });
+})();
+</script>
 {% endblock %}
