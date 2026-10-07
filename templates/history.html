@@ -1,1 +1,93 @@
-{% extends "base.html" %}{% block title %}Audify · Becoming the Heartbeat{% endblock %}{% block content %}<div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div><h1>Audify</h1><p class="lede">See the wake your actions have left behind—the rhythm your Beats are actually creating.</p><p class="term-hint"><strong>Audify</strong> means making a pattern perceptible. <a href="{{url_for('musical_language')}}">Explore the musical language.</a></p><div class="view-switch"><a class="{{'active' if not archived_view}}" href="{{url_for('history')}}">Active Beats</a><a class="{{'active' if archived_view}}" href="{{url_for('history',archived=1)}}">Archived</a></div><form class="filters">{% if archived_view %}<input type="hidden" name="archived" value="1">{% endif %}<input name="q" value="{{request.args.get('q','')}}" placeholder="Search what you did…"><select name="area"><option value="">All Life Areas</option>{% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select><input type="date" name="start" value="{{request.args.get('start','')}}"><input type="date" name="end" value="{{request.args.get('end','')}}"><button>Audify</button></form><div class="section-head"><h2>{{total_count}} Beats</h2><span>{{accent_count}} Accents</span></div>{% if total_count > entries|length %}<p class="lede">Showing the most recent {{entries|length}} of {{total_count}} matching Beats.</p>{% endif %}<div class="entries">{% for e in entries %}<article class="entry"><div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name}}</span></div><div class="entry-actions"><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button></form><form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="{{'restore-button' if archived_view else 'archive-button'}}" type="submit">{{'Restore' if archived_view else 'Archive'}}</button></form></div></article>{% else %}<div class="empty">No Beats match this view.</div>{% endfor %}</div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Audify · Becoming the Heartbeat{% endblock %}
+{% block content %}
+<div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div>
+<h1>Audify</h1>
+<p class="lede">Step back from individual Beats and see the rhythm your actions are actually creating.</p>
+<p class="term-hint"><strong>Audify</strong> is where your accumulated actions become perceptible. <a href="{{url_for('musical_language')}}">Explore the musical language.</a></p>
+
+<section class="audify-insights">
+  <div class="section-head audify-insights-head">
+    <div>
+      <div class="eyebrow">INSIGHTS</div>
+      <h2>What your rhythm is showing</h2>
+      <p class="lede">A high-level view of the patterns emerging from your active Beats.</p>
+    </div>
+    <a class="secondary audify-cta" href="#beats">See Your Beats ↓</a>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric"><strong>{{insight_total_count}}</strong><span>Beats recorded</span></div>
+    <div class="metric"><strong>{{insight_accent_count}}</strong><span>Accented Beats</span></div>
+    <div class="metric"><strong>{% if insight_total_count %}{{(insight_accent_count/insight_total_count*100)|round|int}}%{% else %}—{% endif %}</strong><span>Beats accented</span></div>
+    <div class="metric"><strong>{% if comm_known %}{{(communicated/comm_known*100)|round|int}}%{% else %}—{% endif %}</strong><span>Shared with someone</span></div>
+  </div>
+
+  <div class="two-col">
+    <section class="card">
+      <h2>Life Areas</h2>
+      {% for name,count,accents in by_area %}
+      <div class="area-row"><div><b>{{name}}</b><span>{{count}} Beats{% if accents %} · {{accents}} Accents{% endif %}</span></div></div>
+      {% else %}
+      <p>No data yet.</p>
+      {% endfor %}
+    </section>
+    <section class="card">
+      <h2>Record days</h2>
+      {% if most_active %}<p><b>Most active</b><br>{{most_active[0].strftime("%B %-d, %Y")}} · {{most_active[1]}} Beats</p>{% endif %}
+      {% if most_accented and most_accented[2] %}<p><b>Most accented</b><br>{{most_accented[0].strftime("%B %-d, %Y")}} · {{most_accented[2]}} Accents</p>{% endif %}
+      {% if not most_active %}<p>No data yet.</p>{% endif %}
+    </section>
+  </div>
+</section>
+
+<section class="audify-beats" id="beats">
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">SEE YOUR BEATS</div>
+      <h2>The actions behind the pattern</h2>
+      <p class="lede">Search, filter, and review the individual Beats that make up your rhythm.</p>
+    </div>
+  </div>
+
+  <div class="view-switch">
+    <a class="{{'active' if not archived_view}}" href="{{url_for('history')}}#beats">Active Beats</a>
+    <a class="{{'active' if archived_view}}" href="{{url_for('history',archived=1)}}#beats">Archived</a>
+  </div>
+
+  <form class="filters">
+    {% if archived_view %}<input type="hidden" name="archived" value="1">{% endif %}
+    <input name="q" value="{{request.args.get('q','')}}" placeholder="Search what you did…">
+    <select name="area">
+      <option value="">All Life Areas</option>
+      {% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}
+    </select>
+    <input type="date" name="start" value="{{request.args.get('start','')}}">
+    <input type="date" name="end" value="{{request.args.get('end','')}}">
+    <button>Filter Beats</button>
+  </form>
+
+  <div class="section-head"><h2>{{total_count}} Beats</h2><span>{{accent_count}} Accents</span></div>
+  {% if total_count > entries|length %}<p class="lede">Showing the most recent {{entries|length}} of {{total_count}} matching Beats.</p>{% endif %}
+
+  <div class="entries">
+    {% for e in entries %}
+    <article class="entry">
+      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name}}</span></div>
+      <div class="entry-actions">
+        <form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button>
+        </form>
+        <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="{{'restore-button' if archived_view else 'archive-button'}}" type="submit">{{'Restore' if archived_view else 'Archive'}}</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="empty">No Beats match this view.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
