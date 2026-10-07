@@ -41,6 +41,7 @@ class SumEntry(db.Model):
     logged_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     legacy_timestamp = db.Column(db.String(80), nullable=True)
     archived = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    accented = db.Column(db.Boolean, default=False, nullable=False, index=True)
     life_area = db.relationship("LifeArea")
 
 class Goal(db.Model):
@@ -104,6 +105,9 @@ def create_app():
         if "archived" not in columns:
             db.session.execute(db.text("ALTER TABLE sum_entry ADD COLUMN archived BOOLEAN NOT NULL DEFAULT 0"))
             db.session.commit()
+        if "accented" not in columns:
+            db.session.execute(db.text("ALTER TABLE sum_entry ADD COLUMN accented BOOLEAN NOT NULL DEFAULT 0"))
+            db.session.commit()
         user_columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(user)"))}
         if "onboarding_complete" not in user_columns:
             db.session.execute(db.text("ALTER TABLE user ADD COLUMN onboarding_complete BOOLEAN NOT NULL DEFAULT 1"))
@@ -132,22 +136,19 @@ def create_app():
 
         def totals(day):
             q = SumEntry.query.filter_by(user_id=current_user.id, occurred_on=day, archived=False)
-            value = db.session.query(func.coalesce(func.sum(SumEntry.value), 0)).filter_by(
-                user_id=current_user.id, occurred_on=day, archived=False
-            ).scalar()
-            return q.count(), value
+            return q.count(), q.filter_by(accented=True).count()
 
-        today_count, today_value = totals(today)
-        yesterday_count, yesterday_value = totals(yesterday)
+        today_count, today_accents = totals(today)
+        yesterday_count, yesterday_accents = totals(yesterday)
         recent = SumEntry.query.filter_by(
             user_id=current_user.id, occurred_on=today
         ).order_by(SumEntry.archived.asc(), SumEntry.logged_at.desc()).all()
         return render_template(
             "home.html",
             today_count=today_count,
-            today_value=today_value,
+            today_accents=today_accents,
             yesterday_count=yesterday_count,
-            yesterday_value=yesterday_value,
+            yesterday_accents=yesterday_accents,
             recent=recent,
         )
 
@@ -168,7 +169,6 @@ def create_app():
         if request.method == "POST":
             description = request.form.get("description", "").strip()
             try:
-                value = int(request.form.get("value", "1"))
                 area_id = int(request.form.get("life_area_id", ""))
                 occurred_on = datetime.strptime(
                     request.form.get("occurred_on", ""), "%Y-%m-%d"
@@ -179,7 +179,7 @@ def create_app():
             area = LifeArea.query.filter_by(
                 id=area_id, user_id=current_user.id, active=True
             ).first()
-            if not description or not area or value not in range(1, 6):
+            if not description or not area:
                 return invalid("Please complete all fields.")
 
             comm = request.form.get("communicated")
@@ -187,7 +187,7 @@ def create_app():
                 user_id=current_user.id,
                 life_area_id=area.id,
                 description=description,
-                value=value,
+                value=1,
                 communicated=True if comm == "yes" else False if comm == "no" else None,
                 occurred_on=occurred_on,
             )
@@ -199,11 +199,9 @@ def create_app():
                 today_count = SumEntry.query.filter_by(
                     user_id=current_user.id, occurred_on=today, archived=False
                 ).count()
-                today_value = db.session.query(
-                    func.coalesce(func.sum(SumEntry.value), 0)
-                ).filter_by(
-                    user_id=current_user.id, occurred_on=today, archived=False
-                ).scalar()
+                today_accents = SumEntry.query.filter_by(
+                    user_id=current_user.id, occurred_on=today, archived=False, accented=True
+                ).count()
                 return jsonify(
                     ok=True,
                     entry={
@@ -211,11 +209,11 @@ def create_app():
                         "description": entry.description,
                         "life_area": area.name,
                         "life_area_id": area.id,
-                        "value": entry.value,
+                        "accented": entry.accented,
                         "occurred_on": entry.occurred_on.isoformat(),
                     },
                     today_count=today_count,
-                    today_value=today_value,
+                    today_accents=today_accents,
                 )
 
             flash("Beat added.", "success")
@@ -247,7 +245,7 @@ def create_app():
                 pass
 
         total_count = q.count()
-        total_value = q.with_entities(func.coalesce(func.sum(SumEntry.value), 0)).scalar()
+        accent_count = q.filter(SumEntry.accented.is_(True)).count()
         entries = q.order_by(
             SumEntry.occurred_on.desc(), SumEntry.logged_at.desc()
         ).limit(500).all()
@@ -258,7 +256,7 @@ def create_app():
             "history.html",
             entries=entries,
             total_count=total_count,
-            total_value=total_value,
+            accent_count=accent_count,
             areas=areas,
             archived_view=archived_view,
         )
@@ -268,32 +266,31 @@ def create_app():
     def insights():
         entries = SumEntry.query.filter_by(user_id=current_user.id, archived=False).all()
         total_count = len(entries)
-        total_value = sum(e.value for e in entries)
+        accent_count = sum(1 for e in entries if e.accented)
         by_area = db.session.query(
             LifeArea.name,
             func.count(SumEntry.id),
-            func.coalesce(func.sum(SumEntry.value), 0),
+            func.sum(db.case((SumEntry.accented.is_(True), 1), else_=0)),
         ).join(SumEntry).filter(
             SumEntry.user_id == current_user.id,
             SumEntry.archived.is_(False),
-        ).group_by(LifeArea.id).order_by(func.sum(SumEntry.value).desc()).all()
+        ).group_by(LifeArea.id).order_by(func.count(SumEntry.id).desc()).all()
         days = db.session.query(
             SumEntry.occurred_on,
             func.count(SumEntry.id),
-            func.sum(SumEntry.value),
+            func.sum(db.case((SumEntry.accented.is_(True), 1), else_=0)),
         ).filter_by(user_id=current_user.id, archived=False).group_by(SumEntry.occurred_on).all()
         most_active = max(days, key=lambda x: x[1]) if days else None
-        highest_value = max(days, key=lambda x: x[2]) if days else None
+        most_accented = max(days, key=lambda x: x[2] or 0) if days else None
         communicated = sum(1 for e in entries if e.communicated is True)
         comm_known = sum(1 for e in entries if e.communicated is not None)
         return render_template(
             "insights.html",
             total_count=total_count,
-            total_value=total_value,
-            avg=(total_value / total_count if total_count else 0),
+            accent_count=accent_count,
             by_area=by_area,
             most_active=most_active,
-            highest_value=highest_value,
+            most_accented=most_accented,
             communicated=communicated,
             comm_known=comm_known,
         )
@@ -336,6 +333,19 @@ def create_app():
         db.session.commit()
         flash("Beat restored." if not entry.archived else "Beat archived.", "success")
         return redirect(request.referrer or url_for("history"))
+
+    @app.post("/sum/<int:entry_id>/toggle-accent")
+    @login_required
+    def toggle_sum_accent(entry_id):
+        entry = SumEntry.query.filter_by(
+            id=entry_id, user_id=current_user.id
+        ).first_or_404()
+        entry.accented = not entry.accented
+        db.session.commit()
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(ok=True, accented=entry.accented)
+        flash("Beat accented." if entry.accented else "Accent removed.", "success")
+        return redirect(request.referrer or url_for("home"))
 
     @app.route("/goals", methods=["GET", "POST"])
     @login_required
@@ -479,12 +489,9 @@ def create_app():
         archived_beat_count = SumEntry.query.filter_by(
             user_id=user.id, archived=True
         ).count()
-        total_value = db.session.query(
-            func.coalesce(func.sum(SumEntry.value), 0)
-        ).filter(
-            SumEntry.user_id == user.id,
-            SumEntry.archived.is_(False),
-        ).scalar()
+        accent_count = SumEntry.query.filter_by(
+            user_id=user.id, archived=False, accented=True
+        ).count()
         active_area_count = LifeArea.query.filter_by(
             user_id=user.id, active=True
         ).count()
@@ -500,7 +507,7 @@ def create_app():
             viewed_user=user,
             beat_count=beat_count,
             archived_beat_count=archived_beat_count,
-            total_value=total_value,
+            accent_count=accent_count,
             active_area_count=active_area_count,
             rhythmos_count=rhythmos_count,
             last_activity=last_activity,
