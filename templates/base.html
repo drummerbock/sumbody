@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261007-pulse-life-areas') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261007-beat-accents') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -61,14 +61,6 @@
         </div>
       </div>
 
-      <div class="quick-control-group quick-value-group">
-        <span class="quick-control-label">BEAT</span>
-        <div class="quick-value-chips" aria-label="Beat value">
-          {% for n in range(1,6) %}
-          <label class="quick-value"><input type="radio" name="value" value="{{n}}" {% if n == 1 %}checked{% endif %}><span>+{{n}}</span></label>
-          {% endfor %}
-        </div>
-      </div>
     </div>
 
     <div class="quick-meta">
@@ -95,7 +87,7 @@
   const send = form.querySelector('.quick-send');
   const status = document.getElementById('rapid-status');
   const count = document.getElementById('today-tip-count');
-  const sum = document.getElementById('today-sum-value');
+  const accentCount = document.getElementById('today-accent-count');
   const entries = document.getElementById('today-entries');
   const empty = document.getElementById('today-empty');
   const csrf = form.querySelector('input[name="csrf_token"]').value;
@@ -122,9 +114,26 @@
 
     const actions = document.createElement('div');
     actions.className = 'entry-actions';
-    const value = document.createElement('span');
-    value.className = 'value';
-    value.textContent = '+' + entry.value;
+    const accentForm = document.createElement('form');
+    accentForm.method = 'post';
+    accentForm.action = '/sum/' + entry.id + '/toggle-accent';
+    accentForm.className = 'accent-form';
+    const accentToken = document.createElement('input');
+    accentToken.type = 'hidden';
+    accentToken.name = 'csrf_token';
+    accentToken.value = csrf;
+    const accentButton = document.createElement('button');
+    accentButton.type = 'submit';
+    accentButton.className = 'accent-button';
+    accentButton.setAttribute('aria-pressed', 'false');
+    const accentMark = document.createElement('span');
+    accentMark.className = 'accent-mark';
+    accentMark.textContent = '>';
+    const accentLabel = document.createElement('span');
+    accentLabel.className = 'accent-label';
+    accentLabel.textContent = 'Accent';
+    accentButton.append(accentMark, accentLabel);
+    accentForm.append(accentToken, accentButton);
 
     const archiveForm = document.createElement('form');
     archiveForm.method = 'post';
@@ -139,7 +148,7 @@
     archive.textContent = 'Archive';
     archiveForm.append(token, archive);
 
-    actions.append(value, archiveForm);
+    actions.append(accentForm, archiveForm);
     article.append(copy, actions);
     entries.prepend(article);
     if (empty) empty.hidden = true;
@@ -214,22 +223,56 @@
       if (!response.ok || !data.ok) throw new Error(data.error || 'Could not add that Beat.');
 
       if (count) count.textContent = data.today_count;
-      if (sum) sum.textContent = data.today_value;
+      if (accentCount) accentCount.textContent = data.today_accents;
       if (data.entry.occurred_on === today) addEntryToLedger(data.entry);
 
       input.value = '';
       input.placeholder = 'What else happened?';
       input.style.height = 'auto';
 
-      const one = form.querySelector('input[name="value"][value="1"]');
-      if (one) one.checked = true;
       const shared = form.querySelector('input[name="communicated"]');
       if (shared) shared.checked = false;
       const date = form.querySelector('input[name="occurred_on"]');
       if (date) date.value = today;
 
       status.className = 'rapid-status success';
-      status.textContent = 'Added · ' + data.entry.life_area + ' · +' + data.entry.value;
+      status.replaceChildren();
+      const added = document.createElement('span');
+      added.textContent = 'Added · ' + data.entry.life_area;
+      const accent = document.createElement('button');
+      accent.type = 'button';
+      accent.className = 'rapid-accent';
+      accent.textContent = '> Accent this Beat';
+      accent.addEventListener('click', async () => {
+        accent.disabled = true;
+        try {
+          const accentResponse = await fetch('/sum/' + data.entry.id + '/toggle-accent', {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
+          });
+          const accentData = await accentResponse.json();
+          if (!accentResponse.ok || !accentData.ok) throw new Error('Could not accent that Beat.');
+          accent.textContent = accentData.accented ? '> Accented' : '> Accent this Beat';
+          accent.classList.toggle('is-accented', accentData.accented);
+          if (accentCount && data.entry.occurred_on === today) {
+            const current = Number(accentCount.textContent || 0);
+            accentCount.textContent = Math.max(0, current + (accentData.accented ? 1 : -1));
+          }
+          const ledgerButton = document.querySelector('form[action="/sum/' + data.entry.id + '/toggle-accent"] .accent-button');
+          if (ledgerButton) {
+            ledgerButton.classList.toggle('is-accented', accentData.accented);
+            ledgerButton.setAttribute('aria-pressed', accentData.accented ? 'true' : 'false');
+            const label = ledgerButton.querySelector('.accent-label');
+            if (label) label.textContent = accentData.accented ? 'Accented' : 'Accent';
+          }
+        } catch (error) {
+          status.className = 'rapid-status error';
+          status.textContent = error.message;
+        } finally {
+          accent.disabled = false;
+        }
+      });
+      status.append(added, accent);
       input.focus();
     } catch (error) {
       status.className = 'rapid-status error';

@@ -5,7 +5,7 @@
   <div class="today-total">
     <div><strong id="today-tip-count">{{today_count}}</strong><span>Beats</span></div>
     <i></i>
-    <div><strong id="today-sum-value">{{today_value}}</strong><span>Impact</span></div>
+    <div><strong id="today-accent-count">{{today_accents}}</strong><span>Accents</span></div>
   </div>
   <button class="primary hero-add" type="button" data-open-composer>+ Add a Beat</button>
 </section>
@@ -13,7 +13,7 @@
 <section class="day-ledger">
   <div class="section-head">
     <div><div class="eyebrow">TODAY'S BEATS</div><h2>The rhythm you're creating</h2></div>
-    <span>Yesterday · {{yesterday_count}} Beats · Impact {{yesterday_value}}</span>
+    <span>Yesterday · {{yesterday_count}} Beats{% if yesterday_accents %} · {{yesterday_accents}} Accents{% endif %}</span>
   </div>
 
   <div class="entries" id="today-entries">
@@ -21,7 +21,7 @@
     <article class="entry {{'archived-entry' if e.archived}}">
       <div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}{{' · Archived' if e.archived}}</span></div>
       <div class="entry-actions">
-        <span class="value">+{{e.value}}</span>
+        <form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" title="{{'Remove accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button></form>
         <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="{{'restore-button' if e.archived else 'archive-button'}}" type="submit">{{'Restore' if e.archived else 'Archive'}}</button>
