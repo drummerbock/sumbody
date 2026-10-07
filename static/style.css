@@ -155,3 +155,20 @@ h1 em{color:var(--brand-red);font-weight:400}
   .area-row{align-items:flex-start}
   .area-actions{flex-wrap:wrap;justify-content:flex-end}
 }
+
+/* Life Areas: compact editorial ordering */
+.area-example{font:inherit;cursor:pointer}
+.area-example:hover,.area-example:focus-visible{border-color:var(--brand-red);color:var(--ink)}
+.life-area-list{border-top:1px solid var(--line);margin-top:10px}
+.life-area-item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:64px;padding:10px 4px;border-bottom:1px solid var(--line);transition:opacity .15s,background .15s}
+.life-area-item strong{font-size:15px}
+.life-area-item form{margin:0}
+.life-area-item.is-dragging{opacity:.45;background:var(--surface2)}
+.drag-handle{width:34px;height:34px;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:grab;touch-action:none}
+.drag-handle:active{cursor:grabbing}
+.drag-placeholder{display:flex;align-items:center;justify-content:center;opacity:.2}
+.archived-areas{margin-top:28px;border-top:1px solid var(--line);padding-top:16px}
+.archived-areas summary{cursor:pointer;font-weight:800;color:var(--muted)}
+.archived-areas summary span{font-weight:600;margin-left:6px}
+.archived-list{margin-top:12px}
+@media(max-width:700px){.life-area-item{min-height:58px;gap:8px}.life-area-item strong{font-size:14px}}
