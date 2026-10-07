@@ -183,11 +183,13 @@ def create_app():
                 return invalid("Please complete all fields.")
 
             comm = request.form.get("communicated")
+            accented = request.form.get("accented") == "yes"
             entry = SumEntry(
                 user_id=current_user.id,
                 life_area_id=area.id,
                 description=description,
                 value=1,
+                accented=accented,
                 communicated=True if comm == "yes" else False if comm == "no" else None,
                 occurred_on=occurred_on,
             )
