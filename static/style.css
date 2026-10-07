@@ -115,3 +115,9 @@ h1 em{color:var(--brand-red);font-weight:400}
 .rapid-accent{padding:5px 8px;color:var(--mint)}
 .rapid-accent:disabled{opacity:.55;cursor:wait}
 @media(max-width:700px){.accent-label{display:none}.accent-button{padding:7px 9px}.rapid-status.success{width:100%;justify-content:flex-end}}
+
+.rapid-accent-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:#b9c0b9;font-weight:750}
+.rapid-accent-toggle input{position:absolute;opacity:0;pointer-events:none;width:auto}
+.rapid-accent-toggle .accent-mark{opacity:.75}
+.rapid-accent-toggle:has(input:checked){color:var(--ink)}
+.rapid-accent-toggle:has(input:checked) .accent-mark{color:var(--brand-red);opacity:1}
