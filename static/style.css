@@ -155,3 +155,15 @@ h1 em{color:var(--brand-red);font-weight:400}
   .area-row{align-items:flex-start}
   .area-actions{flex-wrap:wrap;justify-content:flex-end}
 }
+
+
+/* How it works + musical language */
+.framework-steps .onboarding-step p strong{color:var(--ink)}
+.language-callout{margin:44px 0 24px;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.language-callout h2{margin:4px 0 8px}.language-callout p{margin:0;color:var(--muted);line-height:1.6;max-width:620px}.language-link{white-space:nowrap;text-decoration:none}
+.language-page{max-width:920px;margin:0 auto}.language-page>h1{max-width:850px}.language-list{margin-top:44px;border-top:1px solid var(--line)}
+.language-term{padding:30px 0;border-bottom:1px solid var(--line)}.language-term-head{display:flex;align-items:baseline;justify-content:space-between;gap:18px;margin-bottom:18px}.language-term-head h2{margin:0;font-size:34px}.language-term-head span{color:var(--brand-red);font-size:11px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;text-align:right}
+.language-definition-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px}.language-definition-grid b{display:block;margin-bottom:7px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.language-definition-grid p{margin:0;color:var(--ink);line-height:1.65}
+.heartbeat-term{padding-bottom:36px}.framework-chain{margin-top:36px}.framework-chain p{font-family:Georgia,"Times New Roman",serif;font-size:23px;line-height:1.6;margin:8px 0}.framework-chain>span{color:var(--muted);font-size:13px;line-height:1.6}
+.term-hint{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.5}.term-hint a{color:var(--ink);text-decoration-color:var(--brand-red);text-underline-offset:3px}
+@media(max-width:700px){.language-callout{align-items:flex-start;flex-direction:column}.language-definition-grid{grid-template-columns:1fr;gap:18px}.language-term-head{align-items:flex-start;flex-direction:column;gap:5px}.language-term-head span{text-align:left}.framework-chain p{font-size:20px}}
