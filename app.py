@@ -271,21 +271,12 @@ def create_app():
         areas = LifeArea.query.filter_by(
             user_id=current_user.id
         ).order_by(LifeArea.sort_order, LifeArea.name).all()
-        return render_template(
-            "history.html",
-            entries=entries,
-            total_count=total_count,
-            accent_count=accent_count,
-            areas=areas,
-            archived_view=archived_view,
-        )
 
-    @app.route("/insights")
-    @login_required
-    def insights():
-        entries = SumEntry.query.filter_by(user_id=current_user.id, archived=False).all()
-        total_count = len(entries)
-        accent_count = sum(1 for e in entries if e.accented)
+        insight_entries = SumEntry.query.filter_by(
+            user_id=current_user.id, archived=False
+        ).all()
+        insight_total_count = len(insight_entries)
+        insight_accent_count = sum(1 for e in insight_entries if e.accented)
         by_area = db.session.query(
             LifeArea.name,
             func.count(SumEntry.id),
@@ -298,21 +289,34 @@ def create_app():
             SumEntry.occurred_on,
             func.count(SumEntry.id),
             func.sum(case((SumEntry.accented.is_(True), 1), else_=0)),
-        ).filter_by(user_id=current_user.id, archived=False).group_by(SumEntry.occurred_on).all()
+        ).filter_by(
+            user_id=current_user.id, archived=False
+        ).group_by(SumEntry.occurred_on).all()
         most_active = max(days, key=lambda x: x[1]) if days else None
         most_accented = max(days, key=lambda x: x[2] or 0) if days else None
-        communicated = sum(1 for e in entries if e.communicated is True)
-        comm_known = sum(1 for e in entries if e.communicated is not None)
+        communicated = sum(1 for e in insight_entries if e.communicated is True)
+        comm_known = sum(1 for e in insight_entries if e.communicated is not None)
+
         return render_template(
-            "insights.html",
+            "history.html",
+            entries=entries,
             total_count=total_count,
             accent_count=accent_count,
+            areas=areas,
+            archived_view=archived_view,
+            insight_total_count=insight_total_count,
+            insight_accent_count=insight_accent_count,
             by_area=by_area,
             most_active=most_active,
             most_accented=most_accented,
             communicated=communicated,
             comm_known=comm_known,
         )
+
+    @app.route("/insights")
+    @login_required
+    def insights():
+        return redirect(url_for("history"))
 
     @app.route("/areas", methods=["GET", "POST"])
     @login_required

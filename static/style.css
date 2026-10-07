@@ -108,7 +108,7 @@ h1 em{color:var(--brand-red);font-weight:400}
 .accent-form{margin:0}
 .accent-button,.rapid-accent{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:9px;padding:7px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:.15s}
 .accent-button{display:inline-flex;align-items:center;gap:6px}
-.accent-mark{font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:.7;transform:rotate(-18deg);display:inline-block}
+.accent-mark{font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:.7;transform:none;display:inline-block}
 .accent-button:hover,.rapid-accent:hover{border-color:var(--brand-red);color:var(--ink)}
 .accent-button.is-accented,.rapid-accent.is-accented{border-color:var(--brand-red);background:#b5362b18;color:var(--ink)}
 .rapid-status.success{display:flex;align-items:center;justify-content:flex-end;gap:8px}
@@ -184,3 +184,30 @@ h1 em{color:var(--brand-red);font-weight:400}
 .archived-areas summary span{font-weight:600;margin-left:6px}
 .archived-list{margin-top:12px}
 @media(max-width:700px){.life-area-item{min-height:58px;gap:8px}.life-area-item strong{font-size:14px}}
+
+
+/* Suite audit: hierarchy + Audify */
+.inline-manage{
+  align-self:flex-end;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  text-decoration:none;
+  border-bottom:1px solid transparent;
+  padding:4px 0;
+}
+.inline-manage:hover{color:var(--ink);border-bottom-color:var(--brand-red)}
+.rhythmos-builder{margin:0 0 58px}
+.rhythmos-builder .goal-composer{margin:18px 0 0}
+.audify-insights{margin-top:42px;padding-bottom:48px;border-bottom:1px solid var(--line)}
+.audify-insights-head{align-items:flex-end}
+.audify-insights .metric-grid{margin-top:22px}
+.audify-insights .two-col{margin-top:14px}
+.audify-cta{text-decoration:none;white-space:nowrap}
+.audify-beats{scroll-margin-top:24px;padding-top:48px}
+.tutorial-link{display:inline-block;margin-top:16px;text-decoration:none}
+@media(max-width:700px){
+  .inline-manage{align-self:flex-start}
+  .audify-insights-head{align-items:flex-start;flex-direction:column}
+  .audify-cta{align-self:flex-start}
+}
