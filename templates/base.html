@@ -65,13 +65,12 @@
 
     <div class="quick-meta">
       <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
-      <details>
-        <summary>More</summary>
-        <div class="quick-more">
-          <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
-          <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
-        </div>
-      </details>
+      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Accent</span></label>
+      <button class="details-toggle" id="details-toggle" type="button" aria-expanded="false" aria-controls="quick-details">Details</button>
+      <div class="quick-details" id="quick-details" hidden>
+        <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
+        <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
+      </div>
       <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
   </form>
@@ -92,6 +91,17 @@
   const empty = document.getElementById('today-empty');
   const csrf = form.querySelector('input[name="csrf_token"]').value;
   const today = form.dataset.today;
+  const detailsToggle = document.getElementById('details-toggle');
+  const detailsPanel = document.getElementById('quick-details');
+
+  if (detailsToggle && detailsPanel) {
+    detailsToggle.addEventListener('click', () => {
+      const opening = detailsPanel.hidden;
+      detailsPanel.hidden = !opening;
+      detailsToggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      composer.classList.toggle('details-open', opening);
+    });
+  }
 
   const sizeInput = () => {
     input.style.height = 'auto';
@@ -124,14 +134,14 @@
     accentToken.value = csrf;
     const accentButton = document.createElement('button');
     accentButton.type = 'submit';
-    accentButton.className = 'accent-button';
-    accentButton.setAttribute('aria-pressed', 'false');
+    accentButton.className = 'accent-button' + (entry.accented ? ' is-accented' : '');
+    accentButton.setAttribute('aria-pressed', entry.accented ? 'true' : 'false');
     const accentMark = document.createElement('span');
     accentMark.className = 'accent-mark';
     accentMark.textContent = '>';
     const accentLabel = document.createElement('span');
     accentLabel.className = 'accent-label';
-    accentLabel.textContent = 'Accent';
+    accentLabel.textContent = entry.accented ? 'Accented' : 'Accent';
     accentButton.append(accentMark, accentLabel);
     accentForm.append(accentToken, accentButton);
 
@@ -230,6 +240,8 @@
       input.placeholder = 'What else happened?';
       input.style.height = 'auto';
 
+      const initialAccent = form.querySelector('input[name="accented"]');
+      if (initialAccent) initialAccent.checked = false;
       const shared = form.querySelector('input[name="communicated"]');
       if (shared) shared.checked = false;
       const date = form.querySelector('input[name="occurred_on"]');
@@ -242,7 +254,8 @@
       const accent = document.createElement('button');
       accent.type = 'button';
       accent.className = 'rapid-accent';
-      accent.textContent = '> Accent this Beat';
+      accent.textContent = data.entry.accented ? '> Accented' : '> Accent this Beat';
+      accent.classList.toggle('is-accented', data.entry.accented);
       accent.addEventListener('click', async () => {
         accent.disabled = true;
         try {
