@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261007-musical-language') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261007-suite-audit') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -21,7 +21,6 @@
     <summary aria-label="Open account menu">{{ current_user.name[:1]|upper }}</summary>
     <div class="account-menu-panel">
       <div class="account-menu-name">{{current_user.name}}</div>
-      <a href="{{url_for('insights')}}">Insights</a>
       <a href="{{url_for('onboarding')}}">How it works</a>
       <a href="{{url_for('musical_language')}}">Musical language</a>
       {% if is_super_admin %}<a href="{{url_for('admin_dashboard')}}">Super Admin</a>{% endif %}
@@ -66,7 +65,7 @@
 
     <div class="quick-meta">
       <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
-      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Accent</span></label>
+      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Save with Accent</span></label>
       <button class="details-toggle" id="details-toggle" type="button" aria-expanded="false" aria-controls="quick-details">Details</button>
       <div class="quick-details" id="quick-details" hidden>
         <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
@@ -255,7 +254,7 @@
       const accent = document.createElement('button');
       accent.type = 'button';
       accent.className = 'rapid-accent';
-      accent.textContent = data.entry.accented ? '> Accented' : '> Accent this Beat';
+      accent.textContent = data.entry.accented ? '> Saved Beat accented' : '> Accent saved Beat';
       accent.classList.toggle('is-accented', data.entry.accented);
       accent.addEventListener('click', async () => {
         accent.disabled = true;
@@ -266,7 +265,7 @@
           });
           const accentData = await accentResponse.json();
           if (!accentResponse.ok || !accentData.ok) throw new Error('Could not accent that Beat.');
-          accent.textContent = accentData.accented ? '> Accented' : '> Accent this Beat';
+          accent.textContent = accentData.accented ? '> Saved Beat accented' : '> Accent saved Beat';
           accent.classList.toggle('is-accented', accentData.accented);
           if (accentCount && data.entry.occurred_on === today) {
             const current = Number(accentCount.textContent || 0);
