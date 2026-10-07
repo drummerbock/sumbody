@@ -345,6 +345,27 @@ def create_app():
         db.session.commit()
         return redirect(url_for("areas"))
 
+    @app.post("/areas/reorder")
+    @login_required
+    def reorder_areas():
+        ids = request.get_json(silent=True, force=False) or {}
+        ids = ids.get("ids", [])
+        if not isinstance(ids, list):
+            return jsonify(ok=False), 400
+        active = LifeArea.query.filter_by(user_id=current_user.id, active=True).all()
+        active_ids = {a.id for a in active}
+        try:
+            ordered_ids = [int(area_id) for area_id in ids]
+        except (TypeError, ValueError):
+            return jsonify(ok=False), 400
+        if set(ordered_ids) != active_ids or len(ordered_ids) != len(active_ids):
+            return jsonify(ok=False), 400
+        by_id = {a.id: a for a in active}
+        for position, area_id in enumerate(ordered_ids):
+            by_id[area_id].sort_order = position
+        db.session.commit()
+        return jsonify(ok=True)
+
     @app.post("/areas/<int:area_id>/move/<direction>")
     @login_required
     def move_area(area_id, direction):
