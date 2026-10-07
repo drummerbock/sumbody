@@ -1,22 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Begin · Becoming the Heartbeat{% endblock %}
+{% block title %}How it works · Becoming the Heartbeat{% endblock %}
 {% block content %}
 <section class="onboarding">
-  <div class="eyebrow">WELCOME, {{current_user.name|upper}}</div>
+  <div class="eyebrow">HOW IT WORKS</div>
   <h1>Practice <em>becoming the heartbeat.</em></h1>
-  <p class="lede onboarding-intro">Prepare the instrument within, establish your tempo, initiate rhythm, sustain your cadence.</p>
+  <p class="lede onboarding-intro">SUMbody uses the language of rhythm to help you notice where you are moving, what you are trying to establish, and what your repeated actions are actually creating.</p>
 
-  <div class="onboarding-steps">
-    <article class="onboarding-step"><span>01</span><div><h2>Beat</h2><p>A Beat is a meaningful action. As Beats repeat, they begin to establish rhythm.</p><p class="step-note">Record a Beat from anywhere in the app without leaving what you’re doing.</p><button class="primary tutorial-add-beat" type="button" data-open-composer>+ Add Beat</button></div></article>
-    <article class="onboarding-step"><span>02</span><div><h2>Today's Tempo</h2><p>Your Beats reveal how you are actually moving through today. Over time, your tempo becomes visible.</p></div></article>
-    <article class="onboarding-step"><span>03</span><div><h2>Rhythmos</h2><p>Rhythmos are the daily movements you want to strengthen. Organize them within <strong>Life Areas</strong>—the parts of your life where you want to establish rhythm.</p></div></article>
-    <article class="onboarding-step"><span>04</span><div><h2>Audify</h2><p>Repeated Beats establish rhythm. Over time, those rhythms become your heartbeat—the pattern you can see in yourself and others can sense, feel, and hear in you. <strong>Audify makes that heartbeat perceptible.</strong></p></div></article>
+  <div class="onboarding-steps framework-steps">
+    <article class="onboarding-step">
+      <span>01</span>
+      <div><h2>Life Areas</h2><p><strong>Where your movement lives.</strong> Choose the parts of your life you want to pay attention to—from Family or Work to a hobby, a relationship, a side hustle, or a cause.</p></div>
+    </article>
+    <article class="onboarding-step">
+      <span>02</span>
+      <div><h2>Pulse</h2><p><strong>What you want to carry into that movement.</strong> In music, pulse is the steady underlying recurrence that gives music forward motion. In SUMbody, it is the intention or direction underneath what you are trying to build.</p></div>
+    </article>
+    <article class="onboarding-step">
+      <span>03</span>
+      <div><h2>Rhythmos</h2><p><strong>The rhythm you intend to establish.</strong> A Rhythmos gives one Life Area a recurring pattern you want to strengthen and return to.</p></div>
+    </article>
+    <article class="onboarding-step">
+      <span>04</span>
+      <div><h2>Beats</h2><p><strong>What you actually do.</strong> In music, the beat is a basic unit of time. Here, each meaningful action you record is one Beat.</p><button class="primary tutorial-add-beat" type="button" data-open-composer>+ Add Beat</button></div>
+    </article>
+    <article class="onboarding-step">
+      <span>05</span>
+      <div><h2>Accents</h2><p><strong>Some Beats carry more emphasis.</strong> In music, an accent gives extra emphasis to a beat without changing the beat itself. In SUMbody, accent a Beat when that action carried unusual significance.</p></div>
+    </article>
+    <article class="onboarding-step">
+      <span>06</span>
+      <div><h2>Audify</h2><p><strong>Make the pattern perceptible.</strong> Repeated Beats form rhythm. Audify lets you look back at what actually happened so the pattern you are creating becomes easier to see.</p></div>
+    </article>
+    <article class="onboarding-step">
+      <span>07</span>
+      <div><h2>Resonance</h2><p><strong>What your rhythm affects beyond the individual Beat.</strong> In music, resonance is the continuation or amplification of vibration. In life, repeated actions can resonate through you, your relationships, and the people around you.</p></div>
+    </article>
   </div>
+
+  <section class="language-callout card">
+    <div>
+      <div class="eyebrow">THE MUSICAL LANGUAGE</div>
+      <h2>Why these words?</h2>
+      <p>The terminology is not decorative. Each word comes from a real musical idea and has a specific role inside SUMbody.</p>
+    </div>
+    <a class="secondary language-link" href="{{ url_for('musical_language') }}">Explore the musical language →</a>
+  </section>
 
   <form method="post" class="onboarding-finish">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <p><strong>You do not need to become someone different.</strong><br>You need to hear your heart beat.</p>
-    <button class="primary">Enter Today's Tempo →</button>
+    <button class="primary">{{ "Back to Today's Tempo →" if current_user.onboarding_complete else "Enter Today's Tempo →" }}</button>
   </form>
 </section>
 {% endblock %}

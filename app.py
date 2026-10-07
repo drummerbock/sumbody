@@ -461,6 +461,11 @@ def create_app():
             return redirect(url_for("home"))
         return render_template("onboarding.html")
 
+    @app.route("/musical-language")
+    @login_required
+    def musical_language():
+        return render_template("musical_language.html")
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if current_user.is_authenticated:
