@@ -52,3 +52,44 @@ Status: code-based review of PR #27 draft, 2026-10-08. Not a substitute for brow
 - Audify never says recorded counts equal time spent, importance, virtue, or effect on others.
 - Keyboard and mobile interactions work without lost drafts.
 - The musical glossary is available but not a prerequisite.
+
+## Audit 02 — interaction reliability, accessibility, and truthfulness (2026-10-08)
+This section is an additional code inspection, not a live browser or automated test result.
+
+### Critical: recorder resilience
+- `templates/base.html` does not persist a draft to sessionStorage/localStorage or another recoverable location. The earlier roadmap's assumption that draft persistence was preserved is **not verified** and is contradicted by the inspected inline script. A page reload or navigation may lose unsent text. Design explicit recoverability with privacy considerations (avoid silently retaining sensitive personal journal text indefinitely).
+- The quick composer is JavaScript-dependent for its intended opening interaction. `templates/add.html` says the composer should open automatically, but the only observed auto-focus occurs when the path is `/add`. Validate no-JS and slow-network fallbacks.
+- The submit handler intercepts POST and fetches JSON. It disables the send button and reports network errors; this is positive. Test double submission, loss of connectivity, and what happens after a successful save followed by a navigation.
+
+### High: accessible controls and user choice
+- `templates/areas.html` has a drag handle, pointer drag, and touch drag, but does not render keyboard move controls, despite a server-side `/areas/<id>/move/<direction>` route existing. Expose Up/Down buttons with meaningful labels and announcements.
+- `static/style.css` contains transitions but no `prefers-reduced-motion` rule in the inspected file. Add a reduced-motion override, and test visible keyboard focus, contrast, and touch target sizes.
+- `templates/base.html` offers two Accent actions. The post-save action updates state, but the toggle's label reverts to 'Accent saved Beat' in one code path. Standardize labels and test keyboard/assistive-technology feedback.
+- Mobile bottom navigation uses short labels while desktop labels include both plain-English and musical terms. Make labels coherent without crowding small screens.
+
+### High: privacy and evidence
+- `app.py` scopes Beat and Life Area queries to `current_user.id` in inspected routes; this is a positive security baseline, not a full security audit.
+- Signup currently seeds five Life Areas. Keep these suggestions editable, and do not automatically treat an unchosen area as a statement about personal priorities.
+- Audify's 'Shared with someone' percentage uses only entries where communication is known; its denominator should be visible. A recorded shared action does not establish how another person perceived it.
+- Current `SumEntry` includes a `communicated` flag, not evidence of another person's perception. Do not claim Audify measures what others feel or infer resonance from this flag alone.
+
+### High: onboarding continuity
+- Signup creates default Life Areas, then redirects to onboarding. Onboarding can record a Beat via the shared composer, but completing onboarding still requires a separate POST action. Test first-save return flow and whether a user can bypass the instructional steps without confusion.
+- Existing users who have no active Life Areas face a blocked composer; handle this state gracefully when implementing unclassified capture.
+
+### Decision record
+1. **Approve for design:** unclassified capture, with reversible and well-tested data changes in a separate PR.
+2. **Approve for design:** recoverable drafts and clear network feedback; define privacy-sensitive retention.
+3. **Approve for design:** keyboard-operable ordering and reduced-motion support.
+4. **Hold:** automated classification, AI personality inferences, streaks, motivational scores, or new engagement mechanics.
+5. **Hold merge:** PR #27 is still draft; no automated or live interaction tests were run during this audit.
+
+### Next test matrix
+- First-time signup → first Beat → revisit onboarding → return to Today.
+- Existing account with zero active Life Areas → record Beat.
+- iOS/Android narrow viewport → open composer → type → change Life Area → save.
+- Draft interrupted by accidental navigation, refresh, and network loss.
+- Accent draft, then accent saved Beat; confirm independent controls and consistent status.
+- Keyboard-only Life Area reordering and screen-reader announcements.
+- Thirty days of no activity → return without guilt or inferred silence.
+- Audify with zero Beats, archived Beats, unknown communication flags, and mixed Life Areas.
