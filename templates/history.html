@@ -13,40 +13,54 @@
       <h2>What your rhythm is showing</h2>
       <p class="lede">A high-level view of recorded Beats only. Unrecorded moments matter too.</p>
     </div>
-    <a class="secondary audify-cta" href="#beats">See Your Beats ↓</a>
+    <a class="secondary audify-cta" href="#beats">See your Beats ↓</a>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric"><strong>{{insight_total_count}}</strong><span>Beats recorded</span></div>
-    <div class="metric"><strong>{{insight_accent_count}}</strong><span>Accented Beats</span></div>
-    <div class="metric"><strong>{% if insight_total_count %}{{(insight_accent_count/insight_total_count*100)|round|int}}%{% else %}—{% endif %}</strong><span>Beats accented</span></div>
-    <div class="metric"><strong>{% if comm_known %}{{(communicated/comm_known*100)|round|int}}%{% else %}—{% endif %}</strong><span>Shared with someone</span></div>
+  {% if insight_total_count %}
+  <div class="insight-story" aria-label="Overview of recorded Beats">
+    <div class="insight-summary">
+      <strong>{{insight_total_count}}</strong><span>Beats you've recorded</span>
+      <span class="insight-subline">{{insight_accent_count}} accented · {{unassigned_count}} without a Life Area</span>
+    </div>
+    <div class="insight-timeline card">
+      <div class="section-head"><h3>Past seven days</h3><span>Recorded Beats, not a measure of your day</span></div>
+      <div class="audify-bars" role="img" aria-label="Recorded Beats over the past seven days: {% for day in timeline %}{{day.date}}: {{day.count}}{% if not loop.last %}, {% endif %}{% endfor %}">
+        {% for day in timeline %}
+        <div class="audify-day"><span class="audify-bar-track"><span class="audify-bar-fill" style="height:{{(day.count / max_day_count * 100)|round|int if max_day_count else 0}}%"></span></span><b>{{day.count}}</b><small>{{day.label}}</small></div>
+        {% endfor %}
+      </div>
+      <p class="insight-note">A day without a recorded Beat is simply a day without a record.</p>
+    </div>
   </div>
-
-  <div class="two-col">
+  <div class="two-col audify-discovery">
     <section class="card">
-      <h2>Life Areas</h2>
-      {% if unassigned_count %}<div class="area-row"><div><b>No Life Area</b><span>{{unassigned_count}} Beats</span></div></div>{% endif %}
-      {% for name,count,accents in by_area %}
-      <div class="area-row"><div><b>{{name}}</b><span>{{count}} Beats{% if accents %} · {{accents}} Accents{% endif %}</span></div></div>
-      {% else %}
-      <p>No data yet.</p>
+      <h3>Where your recorded Beats fall</h3>
+      <p class="insight-note">Of {{insight_total_count}} unarchived Beats. Areas are chosen by you.</p>
+      {% for area in insight_area_rows %}
+      <div class="insight-area">
+        <div class="insight-area-label"><b>{{area.name}}</b><span>{{area.count}} · {{(area.count / insight_total_count * 100)|round|int}}%</span></div>
+        <div class="insight-track" role="img" aria-label="{{area.name}}: {{area.count}} of {{insight_total_count}} recorded Beats"><span style="width:{{(area.count / max_area_count * 100)|round|int if max_area_count else 0}}%"></span></div>
+      </div>
       {% endfor %}
     </section>
     <section class="card">
-      <h2>Days with recorded Beats</h2>
-      {% if most_active %}<p><b>Most recorded</b><br>{{most_active[0].strftime("%B %-d, %Y")}} · {{most_active[1]}} Beats</p>{% endif %}
-      {% if most_accented and most_accented[2] %}<p><b>Most accented</b><br>{{most_accented[0].strftime("%B %-d, %Y")}} · {{most_accented[2]}} Accents</p>{% endif %}
-      {% if not most_active %}<p>No data yet.</p>{% endif %}
+      <h3>What you've emphasized</h3>
+      <div class="insight-figure">{{(insight_accent_count / insight_total_count * 100)|round|int}}%</div>
+      <p>{{insight_accent_count}} of {{insight_total_count}} recorded Beats have an Accent.</p>
+      <p class="insight-note">An Accent marks your emphasis, not your worth.</p>
+      {% if comm_known %}<p class="insight-note">Shared with someone: {{communicated}} of {{comm_known}} Beats with a recorded sharing status. This does not tell us how another person felt.</p>{% endif %}
     </section>
   </div>
+  {% else %}
+  <div class="card audify-welcome"><h2>Nothing to analyze yet — and that's okay.</h2><p>When you choose to record a Beat, patterns can begin to appear here.</p><button type="button" class="primary" data-open-composer>Record a Beat</button></div>
+  {% endif %}
 </section>
 
 <section class="audify-beats" id="beats">
   <div class="section-head">
     <div>
       <div class="eyebrow">SEE YOUR BEATS</div>
-      <h2>The actions behind the pattern</h2>
+      <h2>The moments behind the pattern</h2>
       <p class="lede">Search, filter, and review the individual Beats that make up your rhythm.</p>
     </div>
   </div>

@@ -320,6 +320,28 @@ def create_app():
         ).group_by(SumEntry.occurred_on).all()
         most_active = max(days, key=lambda x: x[1]) if days else None
         most_accented = max(days, key=lambda x: x[2] or 0) if days else None
+        # Audify visualizations are strictly descriptive: only user-recorded Beats.
+        # Build the recent 7-day timeline, including days with zero records, without
+        # implying that an unrecorded day was unproductive or intentionally silent.
+        timeline = []
+        for offset in range(6, -1, -1):
+            day = local_today() - timedelta(days=offset)
+            day_entries = [entry for entry in insight_entries if entry.occurred_on == day]
+            timeline.append({
+                "label": day.strftime("%a"),
+                "date": day.isoformat(),
+                "count": len(day_entries),
+                "accents": sum(1 for entry in day_entries if entry.accented),
+            })
+        insight_area_rows = [
+            {"name": name, "count": count, "accents": accents or 0}
+            for name, count, accents in by_area
+        ]
+        if unassigned_count:
+            insight_area_rows.append({"name": "Not categorized", "count": unassigned_count, "accents": sum(1 for entry in insight_entries if entry.life_area_id is None and entry.accented)})
+        insight_area_rows.sort(key=lambda row: (-row["count"], row["name"]))
+        max_area_count = max((row["count"] for row in insight_area_rows), default=0)
+        max_day_count = max((day["count"] for day in timeline), default=0)
         communicated = sum(1 for e in insight_entries if e.communicated is True)
         comm_known = sum(1 for e in insight_entries if e.communicated is not None)
 
@@ -333,6 +355,10 @@ def create_app():
             insight_total_count=insight_total_count,
             insight_accent_count=insight_accent_count,
             by_area=by_area,
+            insight_area_rows=insight_area_rows,
+            max_area_count=max_area_count,
+            timeline=timeline,
+            max_day_count=max_day_count,
             unassigned_count=unassigned_count,
             most_active=most_active,
             most_accented=most_accented,

@@ -2,18 +2,19 @@
 <section class="hero">
   <div class="eyebrow">{{ today.strftime("%A, %B %-d") }}</div>
   <h1>Today's <em>Tempo.</em></h1><p class="lede">A place to notice what mattered today — including moments of listening, restraint, and rest.</p>
-  <div class="today-total">
+  <button class="primary hero-add" type="button" data-open-composer><span aria-hidden="true">＋</span> Record a Beat</button>
+  <div class="today-total" aria-label="Your recorded Beats today">
     <div><strong id="today-tip-count">{{today_count}}</strong><span>Beats</span></div>
     <i></i>
     <div><strong id="today-accent-count">{{today_accents}}</strong><span>Accents</span></div>
   </div>
-  <button class="primary hero-add" type="button" data-open-composer>+ Add a Beat</button>
+
 </section>
 
 <section class="day-ledger">
   <div class="section-head">
     <div><div class="eyebrow">TODAY'S BEATS</div><h2>Moments you've chosen to remember</h2></div>
-    <span>Yesterday · {{yesterday_count}} Beats{% if yesterday_accents %} · {{yesterday_accents}} Accents{% endif %}</span>
+
   </div>
 
   <div class="entries" id="today-entries">
