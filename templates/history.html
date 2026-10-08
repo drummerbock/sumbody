@@ -20,7 +20,7 @@
   <div class="insight-story" aria-label="Overview of recorded Beats">
     <div class="insight-summary">
       <strong>{{insight_total_count}}</strong><span>Beats you've recorded</span>
-      <span class="insight-subline">{{insight_accent_count}} accented · {{unassigned_count}} without a Life Area</span>
+      <span class="insight-subline">{{insight_accent_count}} accented · {{unassigned_count}} without a Rhythmos</span>
     </div>
     <div class="insight-timeline card">
       <div class="section-head"><h3>Past seven days</h3><span>Recorded Beats, not a measure of your day</span></div>
@@ -34,8 +34,8 @@
   </div>
   <div class="two-col audify-discovery">
     <section class="card">
-      <h3>Where your recorded Beats fall</h3>
-      <p class="insight-note">Of {{insight_total_count}} unarchived Beats. Areas are chosen by you.</p>
+      <h3>Beats across your Rhythmos</h3>
+      <p class="insight-note">Of {{insight_total_count}} unarchived Beats. Rhythmos are chosen by you.</p>
       {% for area in insight_area_rows %}
       <div class="insight-area">
         <div class="insight-area-label"><b>{{area.name}}</b><span>{{area.count}} · {{(area.count / insight_total_count * 100)|round|int}}%</span></div>
@@ -74,7 +74,7 @@
     {% if archived_view %}<input type="hidden" name="archived" value="1">{% endif %}
     <input name="q" value="{{request.args.get('q','')}}" placeholder="Search your Beats…">
     <select name="area">
-      <option value="">All Life Areas</option>
+      <option value="">All Rhythmoss</option>
       {% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}
     </select>
     <input type="date" name="start" value="{{request.args.get('start','')}}">
@@ -88,7 +88,7 @@
   <div class="entries">
     {% for e in entries %}
     <article class="entry">
-      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name if e.life_area else 'No Life Area'}}</span></div>
+      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name if e.life_area else 'No Rhythmos'}}</span></div>
       <div class="entry-actions">
         <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
