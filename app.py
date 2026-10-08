@@ -22,7 +22,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(120), nullable=False, default="Becoming the Heartbeat")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     onboarding_complete = db.Column(db.Boolean, default=False, nullable=False)
-    silk_visible_fields = db.Column(db.String(160), nullable=False, default="")
+    silk_visible_fields = db.Column(db.String(160), nullable=False, default="area")
 
 class LifeArea(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -128,7 +128,7 @@ def create_app():
             db.session.commit()
         user_columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(user)"))}
         if "silk_visible_fields" not in user_columns:
-            db.session.execute(db.text("ALTER TABLE user ADD COLUMN silk_visible_fields VARCHAR(160) NOT NULL DEFAULT ''"))
+            db.session.execute(db.text("ALTER TABLE user ADD COLUMN silk_visible_fields VARCHAR(160) NOT NULL DEFAULT 'area'"))
             db.session.commit()
         if "onboarding_complete" not in user_columns:
             db.session.execute(db.text("ALTER TABLE user ADD COLUMN onboarding_complete BOOLEAN NOT NULL DEFAULT 1"))
@@ -144,7 +144,7 @@ def create_app():
     def globals():
         context = {"today": local_today(), "composer_areas": [], "is_super_admin": current_user_is_super_admin(), "silk_visible_fields": []}
         if current_user.is_authenticated:
-            context["silk_visible_fields"] = [x for x in (current_user.silk_visible_fields or "").split(",") if x in ("area", "accent", "date", "shared")]
+            context["silk_visible_fields"] = ["area"] + [x for x in (current_user.silk_visible_fields or "").split(",") if x in ("accent", "date", "shared")]
             context["composer_areas"] = LifeArea.query.filter_by(
                 user_id=current_user.id, active=True
             ).order_by(LifeArea.sort_order, LifeArea.name).all()
@@ -182,9 +182,9 @@ def create_app():
         fields = payload.get("fields")
         if not isinstance(fields, list) or len(fields) > 4 or any(not isinstance(x, str) or x not in allowed for x in fields):
             return jsonify(ok=False, error="Invalid field preferences."), 400
-        current_user.silk_visible_fields = ",".join(dict.fromkeys(fields))
+        current_user.silk_visible_fields = ",".join(dict.fromkeys(["area"] + fields))
         db.session.commit()
-        return jsonify(ok=True, fields=list(dict.fromkeys(fields)))
+        return jsonify(ok=True, fields=list(dict.fromkeys(["area"] + fields)))
 
     @app.route("/add", methods=["GET", "POST"])
     @login_required
