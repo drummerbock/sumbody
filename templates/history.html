@@ -26,6 +26,7 @@
   <div class="two-col">
     <section class="card">
       <h2>Life Areas</h2>
+      {% if unassigned_count %}<div class="area-row"><div><b>No Life Area</b><span>{{unassigned_count}} Beats</span></div></div>{% endif %}
       {% for name,count,accents in by_area %}
       <div class="area-row"><div><b>{{name}}</b><span>{{count}} Beats{% if accents %} · {{accents}} Accents{% endif %}</span></div></div>
       {% else %}
@@ -73,7 +74,7 @@
   <div class="entries">
     {% for e in entries %}
     <article class="entry">
-      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name}}</span></div>
+      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name if e.life_area else 'No Life Area'}}</span></div>
       <div class="entry-actions">
         <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
