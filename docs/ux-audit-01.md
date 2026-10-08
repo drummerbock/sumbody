@@ -125,3 +125,42 @@ Product-owner direction: SILK recorder must feel frictionless; prefer icons and 
 
 ### Implementation guardrail
 Do not redesign all screens or introduce an icon library blindly in PR #27. Establish a small consistent icon vocabulary and screen-by-screen visual hierarchy, then implement in bounded follow-up PRs with usability checks.
+
+## Final code-based screen review and implementation decision (2026-10-08)
+
+### Screen-level disposition
+| Surface | Keep | Change | Validation |
+|---|---|---|---|
+| SILK recorder (`base.html`, `add_sum`) | Fast inline save, Accent, optional detail drawer | Description + Save first; optional area; draft recovery; consistent save/Accent feedback | Mobile typing/selection, interrupted drafts, duplicate submissions |
+| Today (`home.html`) | Recent Beats and calm empty state | Lead with capture and remembered moments; de-emphasize totals and yesterday comparison | Empty and returning states, screen reader |
+| Rhythmos (`goals.html`) | User-authored recurring intentions, archive | Existing Rhythmos first; one compact creation control; optional explanations | New and empty states; archived items |
+| Life Areas (`areas.html`) | Editable areas, examples, archive, order | Separate organization from capture; keyboard reorder; status feedback on failed saves | Touch and keyboard reorder, archive/restore |
+| Audify (`history.html`) | Recorded-only disclaimer, searchable entries, archive | Meaningful evidence-backed patterns first; compact charts; clear denominators and empty state | Sparse data, 500-entry list limit, filters, unknown communication |
+| Onboarding (`onboarding.html`) | First-Beat CTA and reference content | Replace six-step tutorial as default with single action; optional learning below | Signup → first Beat → return |
+| Navigation (`base.html`) | Three main destinations, central mobile add | Icon+label consistency, selected states, compact hierarchy | 320px viewport, zoom, keyboard |
+| Musical language (`musical_language.html`) | Precise paired definitions | Reference-only, optional contextual links; avoid lengthy text in core workflow | Non-musician comprehension |
+| Auth / Admin | Separate account and aggregate admin usage; no journal text in admin user view | Improve account orientation and mobile controls; preserve privacy boundary | Unauthorized access and responsive tables |
+
+### Technical dependency and risk
+- `SumEntry.life_area_id` is non-null and several templates dereference `entry.life_area.name`; `add_sum` requires a valid active area and returns its name. Optional classification therefore requires changes to persistence, JSON responses, Today, Audify joins and filters, and any migration/import code.
+- The app uses `db.create_all()` and ad-hoc SQLite `PRAGMA` / `ALTER TABLE` migrations. SQLite does not trivially relax a column's NOT NULL constraint in place. Do **not** implement optional classification as a superficial front-end-only change. Plan a backup, tested migration and rollback path; check the production database engine first.
+- Audify's `by_area` aggregation currently uses an inner join to LifeArea; unclassified Beats would be silently excluded from area breakdowns unless queries are revised.
+- `Goal.life_area_id` is separately non-null. Making classification optional for Beats does not automatically imply changing the Rhythmos data contract.
+- The history query limits rendered Beats to 500 but computes totals separately. Preserve truthful labeling when filters exceed this cap.
+- The app exposes user aggregate counts and last activity to a privileged admin. Preserve that boundary and do not expose journal text without explicit, separately approved privacy requirements.
+
+### Compact icon vocabulary (proposal)
+- Capture: plus / pencil; Today: calendar-day or sun; Discover: chart; Rhythmos: repeat; Life Areas: layers; Accent: musical accent glyph with text label; Pause/silence: pause icon; More: ellipsis; Settings: gear.
+- Keep visible short labels for navigation and any unfamiliar musical glyph. Provide screen-reader labels and non-color selected states. Avoid decorative illustration unless it improves understanding.
+
+### Recommended bounded PR sequence
+- **PR #27 (existing draft):** stabilize copy, first-use hierarchy, and safe navigation improvements. Test and merge independently; no risky schema change.
+- **Next PR — SILK foundation:** optional Beat classification after tested database migration, draft recovery, save reliability, mobile and accessibility. Preserve existing Life Areas and Beat associations.
+- **Following PR — Visual simplification:** navigation icon+label system, concise onboarding, Today hierarchy, Rhythmos and Life Area accessibility.
+- **Following PR — Audify:** honest visual patterns, clear denominators, evidence-linked drilldown, sparse-data states. No AI inferred values or third-party perceptions.
+
+### Exit criteria for the audit
+- Code-based conceptual and screen review: complete.
+- Prioritized backlog and technical dependencies: documented.
+- Browser visual QA, automated regression, database migration rehearsal, and non-musician usability testing: **not performed**; required before claiming implementation readiness or production quality.
+- No changes to application behavior were made by this audit; only documentation.
