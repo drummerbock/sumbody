@@ -17,7 +17,7 @@ def migrate_nullable_beat_area(database_path):
         if not any(col[1] == "life_area_id" and col[3] for col in columns):
             return False
         original = table[0]
-        updated = re.sub(r'(\blife_area_id\b\s+[^,)]*?)\s+NOT\s+NULL\b', r'\1', original, count=1, flags=re.I)
+        updated = re.sub(r'((?:["\x60])?life_area_id(?:["\x60])?\s+[^,)]*?)\s+NOT\s+NULL\b', r'\1', original, count=1, flags=re.I)
         if updated == original:
             raise RuntimeError("Unable to identify life_area_id NOT NULL constraint")
         updated = re.sub(r'^CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["\x60]?sum_entry["\x60]?', 'CREATE TABLE sum_entry_nullable_migration', updated, count=1, flags=re.I)
