@@ -57,7 +57,7 @@
 
   <form class="filters">
     {% if archived_view %}<input type="hidden" name="archived" value="1">{% endif %}
-    <input name="q" value="{{request.args.get('q','')}}" placeholder="Search what you did…">
+    <input name="q" value="{{request.args.get('q','')}}" placeholder="Search your Beats…">
     <select name="area">
       <option value="">All Life Areas</option>
       {% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}
@@ -75,7 +75,7 @@
     <article class="entry">
       <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name}}</span></div>
       <div class="entry-actions">
-        <form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}">
+        <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button>
         </form>
