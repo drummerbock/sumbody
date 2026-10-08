@@ -93,3 +93,35 @@ This section is an additional code inspection, not a live browser or automated t
 - Keyboard-only Life Area reordering and screen-reader announcements.
 - Thirty days of no activity → return without guilt or inferred silence.
 - Audify with zero Beats, archived Beats, unknown communication flags, and mixed Life Areas.
+
+## Audit 03 — Visual-first, minimal-reading experience (2026-10-08)
+Product-owner direction: SILK recorder must feel frictionless; prefer icons and useful imagery to prose, without requiring users to learn a novel.
+
+### Design requirement: show, don't lecture
+- **First screen:** one dominant action: record a Beat. Use a short question, not a multi-paragraph framework.
+- **Capture:** description first; save available immediately. Secondary controls (Accent, Life Area, date, communication) disclosed only on demand. Optional classification requires the separate data-contract review already documented.
+- **Navigation:** recognizable icons plus concise labels, especially for app-specific concepts. Avoid icon-only navigation until comprehension is tested; always provide accessible names and selected states.
+- **Onboarding:** replace multi-step prose with one working example and immediate practice; keep the musical glossary discoverable, not compulsory.
+- **Audify:** use a small number of honest, legible visualizations with plain-language captions and explicit scope ('from your recorded Beats'). No inferred emotions, values, or interpersonal impact.
+- **Rhythmos / Life Areas:** represent structure visually through grouping and spatial hierarchy rather than large explanations. Avoid category icons that imply universal meanings.
+- **Silence:** use whitespace and neutral states; do not fill an empty day with calls to action or presume intentional rest.
+- **Imagery:** only when it explains a real concept or helps orientation. Avoid decorative images, dashboard clutter, and inaccessible image-only information.
+
+### Copy budget and visual accessibility
+- One primary message and one primary action per screen or major panel.
+- Use short, concrete labels; place longer definitions behind optional 'Learn more' affordances.
+- Pair unfamiliar symbols with text; icons must have accessible names and adequate touch targets.
+- Do not rely on color, icon shape, animation, or imagery alone to convey meaning.
+- Validate mobile scanning, keyboard navigation, screen-reader order, zoom/reflow, contrast, and reduced-motion settings.
+
+### SILK recorder acceptance criteria
+1. User can type and save a Beat without selecting a Life Area or reading an explanation (after the separately scoped schema/validation change).
+2. The primary capture path has one obvious field and one obvious save action.
+3. Accent, category, date and communication choices remain optional and discoverable.
+4. Clear save-in-progress, success, failure, and draft-recovery states.
+5. No silent data loss on interruption; retention behavior is privacy-conscious and understandable.
+6. Accessible labels and feedback for both icons and text controls.
+7. Visual simplification does not conceal important actions or weaken informed choice.
+
+### Implementation guardrail
+Do not redesign all screens or introduce an icon library blindly in PR #27. Establish a small consistent icon vocabulary and screen-by-screen visual hierarchy, then implement in bounded follow-up PRs with usability checks.
