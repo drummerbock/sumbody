@@ -164,3 +164,34 @@ Do not redesign all screens or introduce an icon library blindly in PR #27. Esta
 - Prioritized backlog and technical dependencies: documented.
 - Browser visual QA, automated regression, database migration rehearsal, and non-musician usability testing: **not performed**; required before claiming implementation readiness or production quality.
 - No changes to application behavior were made by this audit; only documentation.
+
+
+## Phase 3 and 4 implementation (2026-10-08)
+
+This entry supersedes earlier implementation-status notes, which describe pre-merge PRs #27/#28. Phase 3/4 changes are proposed in a new PR and are **not** yet verified in a deployed browser.
+
+### Phase 3 — visual hierarchy
+- Navigation uses compact icon-plus-label pairs for Today, Rhythmos and Audify, including mobile.
+- Today puts recording ahead of totals; yesterday comparison is removed from the primary view.
+- Rhythmos presents existing intentions first, with creation behind a clear disclosure and Life Area organization lower on the page.
+- Onboarding starts with a single recording action and collapses optional explanations.
+- Life Areas gain keyboard-accessible up/down controls and status feedback for reordering.
+- Global visible focus and reduced-motion CSS support are added.
+
+### Phase 4 — evidence-based Audify
+- Audify leads with a recorded-only seven-day timeline and Life Area breakdown. Each graphic has numeric labels and accessible descriptions.
+- Percentages have explicit denominators; uncategorized Beats are included in the breakdown.
+- Accent information describes user-selected emphasis, not personal value. Sharing status is not equated with other people's feelings.
+- Sparse data shows a neutral invitation without interpreting missing records.
+
+### Must validate before release
+1. Desktop/mobile nav labels and layout at 320px, zoom, screen reader, and keyboard.
+2. Rhythmos disclosure, empty state, and existing goal order.
+3. Life Area keyboard reorder and failure feedback.
+4. Audify 0/1/many Beats, uncategorized Beats, archived Beats, multiple dates, and large datasets.
+5. Contrast and real-device readability of charts, labels, and focus states.
+6. Compare insight counts with filtered records; charts use all unarchived records, not the filtered subset.
+
+### Remaining follow-up
+- Draft recovery, no-JS fallback, interrupted saves, and live first-time usability testing are still outstanding.
+- No inference about mental state, self-worth, or interpersonal impact should be introduced.
