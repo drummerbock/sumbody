@@ -4,13 +4,15 @@
 <section class="onboarding">
   <div class="eyebrow">HOW IT WORKS</div>
   <h1>Practice <em>becoming the heartbeat.</em></h1>
-  <p class="lede onboarding-intro">Use rhythm to notice where you are moving, establish the patterns you want to return to, record what you actually do, and see what those actions create over time.</p>
+  <p class="lede onboarding-intro">Start with one meaningful moment. You do not need to know music or track everything. Over time, you can discover the rhythms your actions create.</p>
+  <section class="card" aria-label="Start with one Beat"><div class="eyebrow">START HERE</div><h2>What mattered today?</h2><p>Maybe you helped someone, listened carefully, took a needed pause, or simply showed up. Record it as a Beat — a moment worth noticing.</p>{% if composer_areas %}<button class="primary" type="button" data-open-composer>Record your first Beat →</button>{% else %}<a class="primary" href="{{url_for('areas')}}">Choose a part of your life →</a><p class="term-hint">Choose a Life Area once to organize your Beats. You can change it later.</p>{% endif %}</section>
 
+  <p class="term-hint">Everything below is optional to explore now. You can return to it whenever you like.</p>
   <div class="onboarding-steps framework-steps">
     <article class="onboarding-step">
       <span>01</span>
       <div>
-        <h2>Life Areas</h2>
+        <h2>Life Areas <small>· The parts of your life</small></h2>
         <p><strong>Where your movement lives.</strong> Choose the parts of your life you want to pay attention to — from Family or Work to a hobby, a relationship, a side hustle, or a cause.</p>
         <a class="secondary tutorial-link" href="{{url_for('areas')}}">Manage Life Areas →</a>
       </div>
@@ -19,7 +21,7 @@
     <article class="onboarding-step">
       <span>02</span>
       <div>
-        <h2>Rhythmos</h2>
+        <h2>Rhythmos <small>· Routines you want to return to</small></h2>
         <p><strong>The rhythmic movements you want to establish.</strong> Give a Life Area a pattern you want to keep returning to throughout your day.</p>
         <a class="secondary tutorial-link" href="{{url_for('goals')}}">Open Rhythmos →</a>
       </div>
@@ -28,8 +30,8 @@
     <article class="onboarding-step">
       <span>03</span>
       <div>
-        <h2>Beats</h2>
-        <p><strong>What you actually do.</strong> Each meaningful action you record is one Beat. Small Beats matter because rhythm is built through repetition.</p>
+        <h2>Beats <small>· Meaningful moments</small></h2>
+        <p><strong>What you actually do.</strong> Each moment you choose to record is one Beat. A Beat might be action, listening, restraint, or stillness. You never need to record every moment.</p>
         <button class="primary tutorial-add-beat" type="button" data-open-composer>+ Add Beat</button>
       </div>
     </article>
@@ -37,8 +39,8 @@
     <article class="onboarding-step">
       <span>04</span>
       <div>
-        <h2>Accents</h2>
-        <p><strong>Some Beats carry more emphasis.</strong> Accent a Beat when that action deserves to stand out from the surrounding rhythm.</p>
+        <h2>Accents <small>· Moments you want to emphasize</small></h2>
+        <p><strong>Some Beats carry more emphasis.</strong> Accent a Beat if you want it to stand out. This is always optional; an ordinary Beat matters too.</p>
       </div>
     </article>
 
