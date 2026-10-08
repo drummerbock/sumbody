@@ -211,3 +211,9 @@ h1 em{color:var(--brand-red);font-weight:400}
   .audify-insights-head{align-items:flex-start;flex-direction:column}
   .audify-cta{align-self:flex-start}
 }
+
+/* SILK disclosure and optional controls: hidden must override flex/grid styles. */
+.quick-composer [hidden] { display: none !important; }
+.silk-pref { display: inline-flex; align-items: center; gap: .4rem; margin: .25rem .75rem .25rem 0; }
+#silk-settings { padding: .65rem 0; }
+#silk-options-toggle { margin-top: .35rem; }

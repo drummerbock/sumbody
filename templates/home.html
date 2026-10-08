@@ -19,9 +19,9 @@
   <div class="entries" id="today-entries">
     {% for e in recent %}
     <article class="entry {{'archived-entry' if e.archived}}">
-      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name}}{{' · Archived' if e.archived}}</span></div>
+      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name if e.life_area else 'No Life Area'}}{{' · Archived' if e.archived}}</span></div>
       <div class="entry-actions">
-        <form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" title="{{'Remove accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button></form>
+        <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" title="{{'Remove accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button></form>
         <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="{{'restore-button' if e.archived else 'archive-button'}}" type="submit">{{'Restore' if e.archived else 'Archive'}}</button>
