@@ -101,6 +101,47 @@ def create_app():
     csrf.init_app(app)
     login_manager.init_app(app)
     with app.app_context():
+    # SQLite requires a table rebuild to relax an existing NOT NULL column.
+    # Use SQLite's backup API before the transaction and preserve user data/indexes.
+    if db.engine.url.get_backend_name() == "sqlite":
+        import sqlite3
+        import re
+        from datetime import datetime as _dt
+        database_path = db.engine.url.database
+        if database_path and database_path != ":memory:" and Path(database_path).exists():
+            with sqlite3.connect(database_path) as connection:
+                table = connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='sum_entry'").fetchone()
+                cols = connection.execute("PRAGMA table_info(sum_entry)").fetchall() if table else []
+                needs_migration = any(col[1] == "life_area_id" and col[3] for col in cols)
+                if needs_migration:
+                    backup_path = str(database_path) + ".pre_nullable_area_" + _dt.utcnow().strftime("%Y%m%d%H%M%S") + ".bak"
+                    with sqlite3.connect(backup_path) as backup:
+                        connection.backup(backup)
+                    original = table[0]
+                    updated = re.sub(r'(\\blife_area_id\\b\\s+[^,)]*?)\\s+NOT\\s+NULL\\b', r'\\1', original, count=1, flags=re.I)
+                    if updated == original:
+                        raise RuntimeError("Cannot safely migrate sum_entry.life_area_id; backup at " + backup_path)
+                    updated = re.sub(r'^CREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?[\\"\\x60]?sum_entry[\\"\\x60]?', 'CREATE TABLE sum_entry_nullable_migration', updated, count=1, flags=re.I)
+                    indexes = [row[0] for row in connection.execute("SELECT sql FROM sqlite_master WHERE type='index' AND tbl_name='sum_entry' AND sql IS NOT NULL")]
+                    connection.execute("PRAGMA foreign_keys=OFF")
+                    try:
+                        connection.execute("BEGIN IMMEDIATE")
+                        connection.execute(updated)
+                        column_names = ', '.join('"' + col[1].replace('"', '""') + '"' for col in cols)
+                        connection.execute(f"INSERT INTO sum_entry_nullable_migration ({column_names}) SELECT {column_names} FROM sum_entry")
+                        connection.execute("DROP TABLE sum_entry")
+                        connection.execute("ALTER TABLE sum_entry_nullable_migration RENAME TO sum_entry")
+                        for statement in indexes:
+                            connection.execute(statement)
+                        if connection.execute("PRAGMA foreign_key_check").fetchall():
+                            raise RuntimeError("Foreign key check failed during Beat migration")
+                        connection.commit()
+                    except Exception:
+                        connection.rollback()
+                        raise
+                    finally:
+                        connection.execute("PRAGMA foreign_keys=ON")
+
         db.create_all()
         # Lightweight SQLite migrations for existing installations.
         columns = {row[1] for row in db.session.execute(db.text("PRAGMA table_info(sum_entry)"))}
