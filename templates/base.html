@@ -12,9 +12,9 @@
   <a class="brand" href="{{ url_for('home') if current_user.is_authenticated else url_for('login') }}"><span class="brand-kicker">I AM</span><span class="brand-title">BECOMING THE HEARTBEAT</span></a>
   {% if current_user.is_authenticated %}
   <nav class="primary-nav">
-    <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today's Tempo</a>
-    <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
-    <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
+    <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today · Tempo</a>
+    <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Routines · Rhythmos</a>
+    <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Discover · Audify</a>
   </nav>
   {% if not (request.endpoint or '').startswith('admin') %}<button class="quick-add desktop-add" type="button" data-open-composer>+ Add Beat</button>{% endif %}
   <details class="account-menu">
@@ -37,10 +37,10 @@
 
 {% if current_user.is_authenticated and not (request.endpoint or '').startswith('admin') %}
 <footer>
-  <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today's<br>Tempo</a>
-  <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Rhythmos</a>
+  <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}">Today<br>Tempo</a>
+  <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}">Routines</a>
   <button class="mobile-add" type="button" data-open-composer aria-label="Add Beat">+</button>
-  <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Audify</a>
+  <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}">Discover</a>
 </footer>
 
 <section class="quick-composer" aria-label="Quick Beat composer">
@@ -53,7 +53,7 @@
 
     <div class="quick-controls">
       <div class="quick-control-group quick-area-group">
-        <span class="quick-control-label">Life Area</span>
+        <span class="quick-control-label">Life Area · Where in your life?</span>
         <div class="quick-area-chips">
           {% for a in composer_areas %}
           <label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}" required><span>{{a.name}}</span></label>
@@ -64,8 +64,8 @@
     </div>
 
     <div class="quick-meta">
-      <span class="rapid-hint">Choose a Life Area once. Rapid Fire keeps it selected.</span>
-      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Save with Accent</span></label>
+      <span class="rapid-hint">Choose where this happened once; Rapid Fire remembers your choice.</span>
+      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Emphasize this Beat (optional)</span></label>
       <button class="details-toggle" id="details-toggle" type="button" aria-expanded="false" aria-controls="quick-details">Details</button>
       <div class="quick-details" id="quick-details" hidden>
         <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
@@ -209,7 +209,7 @@
 
     if (!form.querySelector('input[name="life_area_id"]:checked')) {
       status.className = 'rapid-status error';
-      status.textContent = 'Choose a Life Area once, then keep going.';
+      status.textContent = 'Choose a part of your life once, then keep going.';
       activateComposer();
       return;
     }
@@ -254,7 +254,7 @@
       const accent = document.createElement('button');
       accent.type = 'button';
       accent.className = 'rapid-accent';
-      accent.textContent = data.entry.accented ? '> Saved Beat accented' : '> Accent saved Beat';
+      accent.textContent = data.entry.accented ? '> Saved Beat accented' : '> Emphasize the Beat just saved';
       accent.classList.toggle('is-accented', data.entry.accented);
       accent.addEventListener('click', async () => {
         accent.disabled = true;
