@@ -1,6 +1,42 @@
 {% extends "base.html" %}{% block title %}Rhythmos · Becoming the Heartbeat{% endblock %}{% block content %}
 <div class="eyebrow">THE RHYTHMIC MOVEMENTS YOU INTEND TO CREATE</div>
 <h1>Rhythmos</h1>
+<p class="lede">Routines and intentions you want to return to.</p>
+
+
+<details class="rhythmos-add"><summary class="primary">＋ Add Rhythmos</summary><section class="rhythmos-builder">
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">ADD RHYTHMOS</div>
+      <h2>Establish Your Rhythmos</h2>
+      <p class="lede">Choose a Life Area, then name the movement you want to keep returning to.</p>
+    </div>
+  </div>
+
+  <form method="post" class="goal-composer card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Life Area<select name="life_area_id" required><option value="">Choose an area</option>{% for a in areas %}<option value="{{a.id}}">{{a.name}}</option>{% endfor %}</select></label>
+    <label>The rhythm you want to establish<input name="intention" maxlength="240" required placeholder="Be present at home"></label>
+    <label>Optional target<input name="target" maxlength="120" placeholder="e.g. Make time to listen each week"></label>
+    <button class="primary">Add Rhythmos</button>
+  </form>
+</section>
+
+</details><section class="rhythmos-areas rhythmos-areas-top">
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">LIFE AREAS</div>
+      <h2>Where your movement lives</h2>
+      <p class="lede">Every Rhythmos begins in a Life Area — the part of your life where you want movement to take shape.</p>
+    </div>
+    <a class="inline-manage" href="{{url_for('areas')}}">Manage Life Areas →</a>
+  </div>
+  <div class="area-summary">{% for a in all_areas %}<span class="area-pill {{'muted-area' if not a.active}}">{{a.name}}</span>{% endfor %}</div>
+</section>
+
+{% endblock %}{% block content %}
+<div class="eyebrow">THE RHYTHMIC MOVEMENTS YOU INTEND TO CREATE</div>
+<h1>Rhythmos</h1>
 <p class="lede">Think of Rhythmos as routines or intentions you want to return to. No musical experience needed.</p>
 <p class="term-hint"><a href="{{url_for('musical_language')}}">Why these musical terms?</a></p>
 
@@ -39,7 +75,7 @@
     <div>
       <div class="eyebrow">YOUR RHYTHMOS</div>
       <h2>The movements you're establishing</h2>
-      <p class="lede">Return to these movements as you add Beats throughout your day.</p>
+      
     </div>
   </div>
   {% for g in goals %}
