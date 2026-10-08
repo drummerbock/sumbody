@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261008-iodip-visual') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261008-unified-rhythmos') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -54,7 +54,7 @@
     <button type="button" class="details-toggle" id="silk-options-toggle" aria-expanded="false" aria-controls="silk-options">More options</button>
     <div class="quick-controls" id="silk-options">
       <div class="quick-control-group quick-area-group" data-silk-field="area">
-        <span class="quick-control-label">Life Area (optional)</span>
+        <span class="quick-control-label">Rhythmos (optional)</span>
         <div class="quick-area-chips"><label class="quick-choice"><input type="radio" name="life_area_id" value="" checked><span>Decide later</span></label>
           {% for a in composer_areas %}
           <label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}"><span>{{a.name}}</span></label>
@@ -141,7 +141,7 @@
     const description = document.createElement('b');
     description.textContent = entry.description;
     const area = document.createElement('span');
-    area.textContent = entry.life_area || 'No Life Area';
+    area.textContent = entry.life_area || 'No Rhythmos';
     copy.append(description, area);
 
     const actions = document.createElement('div');

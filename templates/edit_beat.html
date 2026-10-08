@@ -5,7 +5,7 @@
   <form method="post" class="form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Your Beat<textarea name="description" rows="3" required>{{entry.description}}</textarea></label>
-    <label>Life Area (optional)<select name="life_area_id"><option value="" {% if not entry.life_area_id %}selected{% endif %}>No Life Area</option>{% for area in areas %}<option value="{{area.id}}" {% if area.id == entry.life_area_id %}selected{% endif %}>{{area.name}}</option>{% endfor %}</select></label>
+    <label>Rhythmos (optional)<select name="life_area_id"><option value="" {% if not entry.life_area_id %}selected{% endif %}>No Rhythmos</option>{% for area in areas %}<option value="{{area.id}}" {% if area.id == entry.life_area_id %}selected{% endif %}>{{area.name}}</option>{% endfor %}</select></label>
     <label>Date<input type="date" name="occurred_on" value="{{entry.occurred_on.isoformat()}}" required></label>
     <label><input type="checkbox" name="accented" value="yes" {% if entry.accented %}checked{% endif %}> Accent this Beat</label>
     <label><input type="checkbox" name="communicated" value="yes" {% if entry.communicated is sameas true %}checked{% endif %}> Shared with someone</label>
