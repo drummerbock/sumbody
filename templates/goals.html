@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% block title %}Rhythmos · Becoming the Heartbeat{% endblock %}{% block content %}
 <div class="eyebrow">THE RHYTHMIC MOVEMENTS YOU INTEND TO CREATE</div>
 <h1>Rhythmos</h1>
-<p class="lede">Rhythmos are rhythmic movements throughout your day.</p>
+<p class="lede">Think of Rhythmos as routines or intentions you want to return to. No musical experience needed.</p>
 <p class="term-hint"><a href="{{url_for('musical_language')}}">Why these musical terms?</a></p>
 
 <section class="rhythmos-areas rhythmos-areas-top">
@@ -29,7 +29,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <label>Life Area<select name="life_area_id" required><option value="">Choose an area</option>{% for a in areas %}<option value="{{a.id}}">{{a.name}}</option>{% endfor %}</select></label>
     <label>The rhythm you want to establish<input name="intention" maxlength="240" required placeholder="Be present at home"></label>
-    <label>Optional target<input name="target" maxlength="120" placeholder="e.g. 3 meaningful Beats each week"></label>
+    <label>Optional target<input name="target" maxlength="120" placeholder="e.g. Make time to listen each week"></label>
     <button class="primary">Add Rhythmos</button>
   </form>
 </section>
@@ -55,7 +55,7 @@
     </form>
   </article>
   {% else %}
-  <div class="empty">No Rhythmos yet. Choose a Life Area, then name one rhythmic movement you want to establish.</div>
+  <div class="empty">No routines set yet. Add one when you are ready — you can still record Beats without one.</div>
   {% endfor %}
 </section>
 {% endblock %}
