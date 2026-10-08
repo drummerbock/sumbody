@@ -47,12 +47,13 @@
   <form method="post" action="{{url_for('add_sum')}}" id="quick-beat-form" data-today="{{today.isoformat()}}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="quick-beat-line">
-      <textarea id="quick-beat-input" name="description" rows="1" required enterkeyhint="send" aria-label="What did you do?" placeholder="{{ 'What else happened?' if recent is defined and recent else 'What did you do?' }}"></textarea>
+      <textarea id="quick-beat-input" name="description" rows="1" required enterkeyhint="send" aria-label="Record a Beat" placeholder="A moment you want to remember…"></textarea>
       <button class="quick-send" type="submit" aria-label="Add Beat">↑</button>
     </div>
 
-    <div class="quick-controls">
-      <div class="quick-control-group quick-area-group">
+    <button type="button" class="details-toggle" id="silk-options-toggle" aria-expanded="false" aria-controls="silk-options">More options</button>
+    <div class="quick-controls" id="silk-options">
+      <div class="quick-control-group quick-area-group" data-silk-field="area">
         <span class="quick-control-label">Life Area · Where in your life?</span>
         <div class="quick-area-chips">
           {% for a in composer_areas %}
@@ -64,13 +65,15 @@
     </div>
 
     <div class="quick-meta">
-      <span class="rapid-hint">Choose where this happened once; Rapid Fire remembers your choice.</span>
-      <label class="rapid-accent-toggle"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Emphasize this Beat (optional)</span></label>
-      <button class="details-toggle" id="details-toggle" type="button" aria-expanded="false" aria-controls="quick-details">Details</button>
-      <div class="quick-details" id="quick-details" hidden>
-        <label class="share-toggle"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
-        <label class="quick-date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
+      <span class="rapid-hint">Save and continue whenever you like.</span>
+      <label class="rapid-accent-toggle" data-silk-field="accent"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Emphasize this Beat (optional)</span></label>
+
+      <div class="quick-details" id="quick-details">
+        <label class="share-toggle" data-silk-field="shared"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
+        <label class="quick-date" data-silk-field="date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
       </div>
+      <div id="silk-settings" hidden><p>Show by default</p>{% for key,label in [("area","Life Area"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %}> {{label}}</label>{% endfor %}<span id="silk-pref-status" aria-live="polite"></span></div>
+      <button type="button" class="details-toggle" id="silk-settings-toggle">Customize defaults</button>
       <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
   </form>
@@ -91,17 +94,36 @@
   const empty = document.getElementById('today-empty');
   const csrf = form.querySelector('input[name="csrf_token"]').value;
   const today = form.dataset.today;
-  const detailsToggle = document.getElementById('details-toggle');
-  const detailsPanel = document.getElementById('quick-details');
-
-  if (detailsToggle && detailsPanel) {
-    detailsToggle.addEventListener('click', () => {
-      const opening = detailsPanel.hidden;
-      detailsPanel.hidden = !opening;
-      detailsToggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
-      composer.classList.toggle('details-open', opening);
-    });
-  }
+  const optionsToggle = document.getElementById('silk-options-toggle');
+  const optionsPanel = document.getElementById('silk-options');
+  const settingsToggle = document.getElementById('silk-settings-toggle');
+  const settingsPanel = document.getElementById('silk-settings');
+  const prefStatus = document.getElementById('silk-pref-status');
+  const prefChecks = [...settingsPanel.querySelectorAll('input[type="checkbox"]')];
+  let visibleFields = prefChecks.filter(c => c.checked).map(c => c.value);
+  const renderFields = () => {
+    const all = optionsToggle.getAttribute('aria-expanded') === 'true';
+    optionsPanel.hidden = !all && !visibleFields.includes('area');
+    form.querySelectorAll('[data-silk-field]').forEach(el => {el.hidden = !all && !visibleFields.includes(el.dataset.silkField);});
+    settingsToggle.hidden = !all;
+  };
+  optionsToggle.addEventListener('click', () => {
+    optionsToggle.setAttribute('aria-expanded', optionsToggle.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+    renderFields();
+  });
+  settingsToggle.addEventListener('click', () => { settingsPanel.hidden = !settingsPanel.hidden; });
+  prefChecks.forEach(c => c.addEventListener('change', async () => {
+    const next = prefChecks.filter(item => item.checked).map(item => item.value);
+    try {
+      const response = await fetch('/silk/preferences', {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({fields:next})});
+      if (!response.ok) throw new Error('Could not save preferences');
+      visibleFields = next; prefStatus.textContent = 'Saved'; renderFields();
+    } catch (error) {
+      prefChecks.forEach(item => {item.checked = visibleFields.includes(item.value);});
+      prefStatus.textContent = 'Could not save preferences';
+    }
+  }));
+  renderFields();
 
   const sizeInput = () => {
     input.style.height = 'auto';
@@ -209,7 +231,7 @@
 
     if (!form.querySelector('input[name="life_area_id"]:checked')) {
       status.className = 'rapid-status error';
-      status.textContent = 'Choose a part of your life once, then keep going.';
+      status.textContent = 'Choose a Life Area for now.';
       activateComposer();
       return;
     }
@@ -237,7 +259,7 @@
       if (data.entry.occurred_on === today) addEntryToLedger(data.entry);
 
       input.value = '';
-      input.placeholder = 'What else happened?';
+      input.placeholder = 'A moment you want to remember…';
       input.style.height = 'auto';
 
       const initialAccent = form.querySelector('input[name="accented"]');
@@ -250,7 +272,7 @@
       status.className = 'rapid-status success';
       status.replaceChildren();
       const added = document.createElement('span');
-      added.textContent = 'Added · ' + data.entry.life_area;
+      added.textContent = 'Saved';
       const accent = document.createElement('button');
       accent.type = 'button';
       accent.className = 'rapid-accent';
