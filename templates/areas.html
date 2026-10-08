@@ -13,13 +13,14 @@
 </div>
 
 <form method="post" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input id="new-life-area" name="name" required placeholder="New Life Area"><button>Add</button></form>
-<p class="life-area-note">Drag to arrange your Life Areas.</p>
+<p class="life-area-note">Arrange your Life Areas using the arrow buttons or drag to reorder.</p><p id="area-order-status" role="status" aria-live="polite"></p>
 
 <div class="life-area-list" id="life-area-list">
 {% for a in areas if a.active %}
   <div class="life-area-item" draggable="true" data-area-id="{{a.id}}">
     <button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">☰</button>
     <strong>{{a.name}}</strong>
+    <div class="area-order-buttons"><button type="button" class="area-move" data-direction="up" aria-label="Move {{a.name}} up">↑</button><button type="button" class="area-move" data-direction="down" aria-label="Move {{a.name}} down">↓</button></div>
     <form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="archive-button">Archive</button></form>
   </div>
 {% endfor %}
@@ -53,14 +54,30 @@
   const list = document.getElementById('life-area-list');
   if (!list) return;
   let dragging = null;
+  const orderStatus = document.getElementById('area-order-status');
   const saveOrder = async () => {
     const ids = [...list.querySelectorAll('.life-area-item')].map(item => Number(item.dataset.areaId));
-    await fetch('{{url_for("reorder_areas")}}', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token() }}','X-Requested-With':'XMLHttpRequest'},
-      body: JSON.stringify({ids})
-    });
+    try {
+      const response = await fetch('{{url_for("reorder_areas")}}', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token() }}','X-Requested-With':'XMLHttpRequest'},
+        body: JSON.stringify({ids})
+      });
+      if (!response.ok) throw new Error('Unable to save order');
+      orderStatus.textContent = 'Order saved.';
+    } catch (error) {
+      orderStatus.textContent = 'Order could not be saved. Reload and try again.';
+    }
   };
+  list.querySelectorAll('.area-move').forEach(button => button.addEventListener('click', () => {
+    const item = button.closest('.life-area-item');
+    const sibling = button.dataset.direction === 'up' ? item.previousElementSibling : item.nextElementSibling;
+    if (!sibling) return;
+    if (button.dataset.direction === 'up') list.insertBefore(item, sibling);
+    else list.insertBefore(sibling, item);
+    saveOrder();
+    button.focus();
+  }));
   list.querySelectorAll('.life-area-item').forEach(item => {
     item.addEventListener('dragstart', () => { dragging = item; item.classList.add('is-dragging'); });
     item.addEventListener('dragend', () => { item.classList.remove('is-dragging'); dragging = null; saveOrder(); });
