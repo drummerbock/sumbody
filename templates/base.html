@@ -72,7 +72,7 @@
         <label class="share-toggle" data-silk-field="shared"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
         <label class="quick-date" data-silk-field="date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
       </div>
-      <div id="silk-settings" hidden><p>Show by default</p>{% for key,label in [("area","Life Area"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %}> {{label}}</label>{% endfor %}<span id="silk-pref-status" aria-live="polite"></span></div>
+      <div id="silk-settings" hidden><p>Show by default (Life Area is required until the next data update)</p>{% for key,label in [("area","Life Area"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %} {% if key == "area" %}disabled{% endif %}> {{label}}</label>{% endfor %}<span id="silk-pref-status" aria-live="polite"></span></div>
       <button type="button" class="details-toggle" id="silk-settings-toggle">Customize defaults</button>
       <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
@@ -100,7 +100,7 @@
   const settingsPanel = document.getElementById('silk-settings');
   const prefStatus = document.getElementById('silk-pref-status');
   const prefChecks = [...settingsPanel.querySelectorAll('input[type="checkbox"]')];
-  let visibleFields = prefChecks.filter(c => c.checked).map(c => c.value);
+  let visibleFields = ["area", ...prefChecks.filter(c => c.checked && c.value !== "area").map(c => c.value)];
   const renderFields = () => {
     const all = optionsToggle.getAttribute('aria-expanded') === 'true';
     optionsPanel.hidden = !all && !visibleFields.includes('area');
@@ -113,7 +113,7 @@
   });
   settingsToggle.addEventListener('click', () => { settingsPanel.hidden = !settingsPanel.hidden; });
   prefChecks.forEach(c => c.addEventListener('change', async () => {
-    const next = prefChecks.filter(item => item.checked).map(item => item.value);
+    const next = ["area", ...prefChecks.filter(item => item.checked && item.value !== "area").map(item => item.value)];
     try {
       const response = await fetch('/silk/preferences', {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},body:JSON.stringify({fields:next})});
       if (!response.ok) throw new Error('Could not save preferences');
