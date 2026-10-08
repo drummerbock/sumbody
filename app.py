@@ -374,23 +374,10 @@ def create_app():
     @app.route("/areas", methods=["GET", "POST"])
     @login_required
     def areas():
+        # Keep old links and POST forms working, but expose one unified page.
         if request.method == "POST":
-            name = request.form.get("name", "").strip()
-            if name and not LifeArea.query.filter(
-                func.lower(LifeArea.name) == name.lower(),
-                LifeArea.user_id == current_user.id,
-            ).first():
-                next_order = db.session.query(func.coalesce(func.max(LifeArea.sort_order), -1)).filter_by(
-                    user_id=current_user.id
-                ).scalar() + 1
-                db.session.add(LifeArea(user_id=current_user.id, name=name, sort_order=next_order))
-                db.session.commit()
-            return redirect(url_for("areas"))
-        return render_template(
-            "areas.html",
-            areas=LifeArea.query.filter_by(user_id=current_user.id)
-            .order_by(LifeArea.active.desc(), LifeArea.sort_order, LifeArea.name).all(),
-        )
+            return goals()
+        return redirect(url_for("goals"))
 
     @app.post("/areas/<int:area_id>/toggle")
     @login_required
@@ -400,7 +387,7 @@ def create_app():
         ).first_or_404()
         area.active = not area.active
         db.session.commit()
-        return redirect(url_for("areas"))
+        return redirect(url_for("goals"))
 
     @app.post("/areas/reorder")
     @login_required
@@ -513,32 +500,34 @@ def create_app():
     @app.route("/goals", methods=["GET", "POST"])
     @login_required
     def goals():
-        active_areas = LifeArea.query.filter_by(
-            user_id=current_user.id, active=True
-        ).order_by(LifeArea.sort_order, LifeArea.name).all()
+        # Rhythmos are the existing LifeArea records: preserve Beat associations,
+        # ordering and archives without a destructive database migration.
         if request.method == "POST":
-            intention = request.form.get("intention", "").strip()
-            target = request.form.get("target", "").strip() or None
-            area_id = request.form.get("life_area_id", type=int)
-            area = LifeArea.query.filter_by(
-                id=area_id, user_id=current_user.id, active=True
-            ).first()
-            if not intention or not area:
-                flash("Choose a Life Area and write your intention.", "error")
-            else:
-                db.session.add(Goal(
-                    user_id=current_user.id,
-                    life_area_id=area.id,
-                    intention=intention,
-                    target=target,
-                ))
+            name = request.form.get("name", "").strip()
+            if name and not LifeArea.query.filter(
+                func.lower(LifeArea.name) == name.lower(),
+                LifeArea.user_id == current_user.id,
+            ).first():
+                next_order = db.session.query(func.coalesce(func.max(LifeArea.sort_order), -1)).filter_by(
+                    user_id=current_user.id
+                ).scalar() + 1
+                db.session.add(LifeArea(user_id=current_user.id, name=name, sort_order=next_order))
                 db.session.commit()
                 flash("Rhythmos added.", "success")
+            elif not name:
+                flash("Name your Rhythmos.", "error")
+            else:
+                flash("That Rhythmos already exists.", "error")
             return redirect(url_for("goals"))
-        user_goals = Goal.query.filter_by(user_id=current_user.id).order_by(
-            Goal.active.desc(), Goal.created_at.desc()
-        ).all()
-        return render_template("goals.html", goals=user_goals, areas=active_areas, all_areas=LifeArea.query.filter_by(user_id=current_user.id).order_by(LifeArea.active.desc(), LifeArea.name).all())
+        return render_template(
+            "goals.html",
+            areas=LifeArea.query.filter_by(user_id=current_user.id).order_by(
+                LifeArea.active.desc(), LifeArea.sort_order, LifeArea.name
+            ).all(),
+            legacy_goals=Goal.query.filter_by(user_id=current_user.id).order_by(
+                Goal.active.desc(), Goal.created_at.desc()
+            ).all(),
+        )
 
     @app.post("/goals/<int:goal_id>/toggle")
     @login_required
