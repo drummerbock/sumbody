@@ -3,7 +3,7 @@
 {% block content %}
 <div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div>
 <h1>Audify</h1>
-<p class="lede">Step back from individual Beats and see the rhythm your actions are actually creating.</p>
+<p class="lede">Explore patterns in what you have recorded. These are observations, not a measure of your worth or everything you have done.</p>
 <p class="term-hint"><strong>Audify</strong> is where your accumulated actions become perceptible. <a href="{{url_for('musical_language')}}">Explore the musical language.</a></p>
 
 <section class="audify-insights">
@@ -11,7 +11,7 @@
     <div>
       <div class="eyebrow">INSIGHTS</div>
       <h2>What your rhythm is showing</h2>
-      <p class="lede">A high-level view of the patterns emerging from your active Beats.</p>
+      <p class="lede">A high-level view of recorded Beats only. Unrecorded moments matter too.</p>
     </div>
     <a class="secondary audify-cta" href="#beats">See Your Beats ↓</a>
   </div>
@@ -33,8 +33,8 @@
       {% endfor %}
     </section>
     <section class="card">
-      <h2>Record days</h2>
-      {% if most_active %}<p><b>Most active</b><br>{{most_active[0].strftime("%B %-d, %Y")}} · {{most_active[1]}} Beats</p>{% endif %}
+      <h2>Days with recorded Beats</h2>
+      {% if most_active %}<p><b>Most recorded</b><br>{{most_active[0].strftime("%B %-d, %Y")}} · {{most_active[1]}} Beats</p>{% endif %}
       {% if most_accented and most_accented[2] %}<p><b>Most accented</b><br>{{most_accented[0].strftime("%B %-d, %Y")}} · {{most_accented[2]}} Accents</p>{% endif %}
       {% if not most_active %}<p>No data yet.</p>{% endif %}
     </section>
