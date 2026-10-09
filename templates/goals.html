@@ -1,9 +1,9 @@
 {% extends "base.html" %}{% block title %}Rhythmos · Becoming the Heartbeat{% endblock %}{% block content %}
 <div class="eyebrow">WHERE YOUR MOVEMENT LIVES</div>
 <h1>Rhythmos</h1>
-<p class="lede">The dimensions of your life where rhythm develops. A Rhythmos can be Family, Work, a relationship, a hobby, or anything meaningful to you. It does not need to be a routine or a goal.</p>
+<p class="lede">The dimensions of your life that rhythm can help develop. Your Rhythmos could be Family, Work, a relationship, a hobby, or anything meaningful to you. It does not need to be a routine or a goal.</p>
 
-<section class="rhythmos-journey"><div class="section-head"><div><div class="eyebrow">YOUR DIMENSIONS</div><h2>Where your moments belong</h2><p class="lede">Choose a Rhythmos to revisit its Beats, or listen to the patterns emerging over time.</p></div></div>
+<section class="rhythmos-journey"><div class="section-head"><div><div class="eyebrow">YOUR DIMENSIONS</div><h2>Where your moments belong</h2><a class="secondary manage-rhythmos-link" href="#manage-rhythmos">Add or manage Rhythmos</a><p class="lede">Choose a Rhythmos to revisit its Beats, or listen to the patterns emerging over time.</p></div></div>
 {% if request.args.get('focus') %}<p class="insight-note">Explore the Rhythmos connected to your day.</p>{% endif %}
 <div class="rhythmos-cards">
 {% for a in areas if a.active %}
@@ -15,7 +15,7 @@
 </div>
 </section>
 <p class="rhythmos-next"><a href="{{url_for('history')}}">Explore your overall rhythm in Audify →</a></p>
-<details class="rhythmos-manage" id="manage-rhythmos"><summary>Manage Rhythmos</summary>
+<details class="rhythmos-manage" id="manage-rhythmos"><summary>Manage Rhythmos — add, reorder, or archive</summary>
 <p class="lede">Add, reorder, or archive dimensions of your life. These controls don't change your recorded Beats.</p>
 <div class="life-area-examples"><span class="life-area-examples-label">Your Rhythmos could include</span><div class="area-summary">
 {% for example in ["A hobby", "A side hustle", "One important relationship", "A cause or nonprofit you support"] %}
