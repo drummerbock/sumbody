@@ -131,7 +131,7 @@
     if (!entries) return;
 
     const article = document.createElement('article');
-    article.className = 'entry rapid-entry';
+    article.className = 'entry beat-row rapid-entry';
 
     const copy = document.createElement('div');
     copy.className = 'entry-copy';
@@ -139,7 +139,10 @@
     description.textContent = entry.description;
     const area = document.createElement('span');
     area.textContent = entry.life_area || 'No Rhythmos';
-    copy.append(description, area);
+    const textAccent = document.createElement('div');
+    textAccent.className = 'beat-text-accent';
+    textAccent.append(description);
+    copy.append(textAccent, area);
 
     const actions = document.createElement('div');
     actions.className = 'entry-actions';
@@ -159,8 +162,9 @@
     accentMark.className = 'accent-mark';
     accentMark.textContent = '>';
     const accentLabel = document.createElement('span');
-    accentLabel.className = 'accent-label';
-    accentLabel.textContent = entry.accented ? 'Accented' : 'Accent';
+    accentLabel.className = 'visually-hidden';
+    accentLabel.textContent = entry.accented ? 'Remove Accent' : 'Accent this Beat';
+    accentButton.setAttribute('aria-label', accentLabel.textContent);
     accentButton.append(accentMark, accentLabel);
     accentForm.append(accentToken, accentButton);
 
@@ -177,7 +181,12 @@
     archive.textContent = 'Archive';
     archiveForm.append(token, archive);
 
-    actions.append(accentForm, archiveForm);
+    textAccent.append(accentForm);
+    const edit = document.createElement('a');
+    edit.className = 'secondary';
+    edit.href = '/sum/' + entry.id + '/edit';
+    edit.textContent = 'Edit';
+    actions.append(edit, archiveForm);
     article.append(copy, actions);
     entries.prepend(article);
     if (empty) empty.hidden = true;
