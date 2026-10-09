@@ -19,10 +19,15 @@
 {% for a in areas if a.active %}
   <div class="life-area-item" draggable="true" data-area-id="{{a.id}}">
     <button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">☰</button>
-    <strong>{{a.name}}</strong>
+    <div class="rhythmos-label"><strong>{{a.name}}</strong>
+      {% set insight = rhythmos_insights.get(a.id) %}
+      {% if insight %}<small>{{insight.total}} recorded Beats · {{insight.accents}} Accents</small>{% else %}<small>No recorded Beats yet</small>{% endif %}
+    </div>
     <div class="area-order-buttons"><button type="button" class="area-move" data-direction="up" aria-label="Move {{a.name}} up">↑</button><button type="button" class="area-move" data-direction="down" aria-label="Move {{a.name}} down">↓</button></div>
     <form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="archive-button">Archive</button></form>
   </div>
+  {% set insight = rhythmos_insights.get(a.id) %}
+  {% if insight %}<details class="rhythmos-audify"><summary>Audify {{a.name}}</summary><div class="rhythmos-audify-body"><p><strong>{{insight.total}}</strong> recorded Beats · <strong>{{insight.accents}}</strong> Accents</p><p>Past 7 days: {{insight.recent}} recorded · Previous 7 days: {{insight.previous}} recorded</p><p class="insight-note">This reflects only what you recorded, not everything that happened in this part of your life.</p><a href="{{url_for('history',area=a.id)}}#beats">See {{a.name}} Beats →</a></div></details>{% endif %}
 {% endfor %}
 </div>
 
