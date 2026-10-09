@@ -36,4 +36,5 @@
     <span>+</span><b>No Beats recorded today — and that's okay.</b><small>When something feels worth remembering, record it. Not every meaningful moment needs to be logged.</small>
   </button>
 </section>
+<section class="today-rhythm-bridge card"><div class="eyebrow">FROM BEATS TO RHYTHMOS</div><h2>Where today's moments belong</h2>{% if today_rhythmos %}<div class="today-rhythm-links">{% for id, item in today_rhythmos.items() %}<a href="{{url_for('goals')}}#rhythmos-{{id}}"><strong>{{item.name}}</strong><span>{{item.count}} {{'Beat' if item.count == 1 else 'Beats'}} <span aria-hidden="true">→</span></span></a>{% endfor %}</div>{% else %}<p class="insight-note">Your Beats can belong to a Rhythmos, or remain uncategorized. You can decide later.</p>{% endif %}<a class="rhythm-bridge-next" href="{{url_for('goals')}}">Explore the dimensions of your life →</a></section>
 {% endblock %}
