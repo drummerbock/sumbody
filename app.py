@@ -519,11 +519,28 @@ def create_app():
             else:
                 flash("That Rhythmos already exists.", "error")
             return redirect(url_for("goals"))
+        # Per-Rhythmos Audify: only recorded, non-archived Beats; no behavioral inference.
+        rhythmos_entries = SumEntry.query.filter_by(user_id=current_user.id, archived=False).all()
+        rhythmos_insights = {}
+        today = local_today()
+        for area in LifeArea.query.filter_by(user_id=current_user.id).all():
+            matching = [beat for beat in rhythmos_entries if beat.life_area_id == area.id]
+            if not matching:
+                continue
+            recent = sum(1 for beat in matching if today - timedelta(days=6) <= beat.occurred_on <= today)
+            previous = sum(1 for beat in matching if today - timedelta(days=13) <= beat.occurred_on <= today - timedelta(days=7))
+            rhythmos_insights[area.id] = {
+                "total": len(matching),
+                "accents": sum(1 for beat in matching if beat.accented),
+                "recent": recent,
+                "previous": previous,
+            }
         return render_template(
             "goals.html",
             areas=LifeArea.query.filter_by(user_id=current_user.id).order_by(
                 LifeArea.active.desc(), LifeArea.sort_order, LifeArea.name
             ).all(),
+            rhythmos_insights=rhythmos_insights,
             legacy_goals=Goal.query.filter_by(user_id=current_user.id).order_by(
                 Goal.active.desc(), Goal.created_at.desc()
             ).all(),

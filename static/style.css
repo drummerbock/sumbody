@@ -262,3 +262,14 @@ footer .nav-symbol{font-size:22px}
 :where(button,a,input,textarea,select,summary):focus-visible{outline:3px solid var(--mint);outline-offset:3px}
 @media(max-width:680px){.insight-story{grid-template-columns:1fr}.onboarding-mini-grid{grid-template-columns:1fr}.audify-bars{gap:6px}.hero .today-total strong{font-size:30px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+/* Audit phase 5: accessible navigation and contextual Rhythmos insights */
+.nav-symbol svg{display:block;width:1.25rem;height:1.25rem;flex:none}
+.rhythmos-label{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.rhythmos-label small{opacity:.72;font-size:.8rem}
+.rhythmos-audify{margin:.25rem 0 1rem;padding:.65rem 1rem;border:1px solid var(--line,#d8d6cf);border-radius:12px}
+.rhythmos-audify summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.rhythmos-audify-body{padding:.35rem 0 .65rem}
+.rhythmos-audify-body p{margin:.4rem 0}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #2679a8;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.rhythmos-audify *{scroll-behavior:auto!important;transition:none!important}}
