@@ -2,15 +2,16 @@
 {% block title %}Audify · Becoming the Heartbeat{% endblock %}
 {% block content %}
 <div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div>
-<h1>Audify</h1>
+<h1>Audify{% if selected_area %}: {{selected_area.name}}{% endif %}</h1>
 <p class="lede">Explore patterns in what you have recorded. These are observations, not a measure of your worth or everything you have done.</p>
+<div class="audify-context"><form method="get" action="{{url_for('history')}}" class="audify-scope"><label for="audify-area">Listen to</label><select id="audify-area" name="area" onchange="this.form.submit()"><option value="">Your overall rhythm</option>{% for a in areas %}<option value="{{a.id}}" {% if selected_area and selected_area.id == a.id %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select><noscript><button type="submit">Explore</button></noscript></form>{% if selected_area %}<a href="{{url_for('goals')}}#rhythmos-{{selected_area.id}}">Back to {{selected_area.name}} in Rhythmos →</a>{% else %}<a href="{{url_for('goals')}}">Explore your Rhythmos →</a>{% endif %}</div>
 <p class="term-hint"><strong>Audify</strong> is where your accumulated actions become perceptible. <a href="{{url_for('musical_language')}}">Explore the musical language.</a></p>
 
 <section class="audify-insights">
   <div class="section-head audify-insights-head">
     <div>
       <div class="eyebrow">INSIGHTS</div>
-      <h2>What your rhythm is showing</h2>
+      <h2>{% if selected_area %}The rhythm of {{selected_area.name}}{% else %}What your rhythm is showing{% endif %}</h2>
       <p class="lede">A high-level view of recorded Beats only. Unrecorded moments matter too.</p>
     </div>
     <a class="secondary audify-cta" href="#beats">See your Beats ↓</a>
@@ -34,8 +35,8 @@
   </div>
   <div class="two-col audify-discovery">
     <section class="card">
-      <h3>Beats across your Rhythmos</h3>
-      <p class="insight-note">Of {{insight_total_count}} unarchived Beats. Rhythmos are chosen by you.</p>
+      <h3>{% if selected_area %}Beats within {{selected_area.name}}{% else %}Beats across your Rhythmos{% endif %}</h3>
+      <p class="insight-note">Of {{insight_total_count}} unarchived Beats. These are only moments you chose to record.</p>
       {% for area in insight_area_rows %}
       <div class="insight-area">
         <div class="insight-area-label"><b>{{area.name}}</b><span>{{area.count}} · {{(area.count / insight_total_count * 100)|round|int}}%</span></div>
@@ -74,7 +75,7 @@
     {% if archived_view %}<input type="hidden" name="archived" value="1">{% endif %}
     <input name="q" value="{{request.args.get('q','')}}" placeholder="Search your Beats…">
     <select name="area">
-      <option value="">All Rhythmoss</option>
+      <option value="">All Rhythmos</option>
       {% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}
     </select>
     <input type="date" name="start" value="{{request.args.get('start','')}}">
