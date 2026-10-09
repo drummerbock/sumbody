@@ -3,59 +3,32 @@
 <h1>Rhythmos</h1>
 <p class="lede">The dimensions of your life where rhythm develops. A Rhythmos can be Family, Work, a relationship, a hobby, or anything meaningful to you. It does not need to be a routine or a goal.</p>
 
-<div class="life-area-examples">
-  <span class="life-area-examples-label">Your Rhythmos could include</span>
-  <div class="area-summary">
-    {% for example in ["A hobby", "A side hustle", "One important relationship", "A cause or nonprofit you support"] %}
-    <button class="area-pill area-example" type="button" data-example="{{example}}">{{example}}</button>
-    {% endfor %}
-  </div>
-</div>
-
-<form method="post" action="{{url_for('goals')}}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input id="new-life-area" name="name" required placeholder="New Rhythmos"><button>Add</button></form>
-<p class="life-area-note">Arrange your Rhythmos using the arrow buttons or drag to reorder.</p><p id="area-order-status" role="status" aria-live="polite"></p>
-
-<div class="life-area-list" id="life-area-list">
+<section class="rhythmos-journey"><div class="section-head"><div><div class="eyebrow">YOUR DIMENSIONS</div><h2>Where your moments belong</h2><p class="lede">Choose a Rhythmos to revisit its Beats, or listen to the patterns emerging over time.</p></div></div>
+{% if request.args.get('focus') %}<p class="insight-note">Explore the Rhythmos connected to your day.</p>{% endif %}
+<div class="rhythmos-cards">
 {% for a in areas if a.active %}
-  <div class="life-area-item" draggable="true" data-area-id="{{a.id}}">
-    <button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">☰</button>
-    <div class="rhythmos-label"><strong>{{a.name}}</strong>
-      {% set insight = rhythmos_insights.get(a.id) %}
-      {% if insight %}<small>{{insight.total}} recorded Beats · {{insight.accents}} Accents</small>{% else %}<small>No recorded Beats yet</small>{% endif %}
-    </div>
-    <div class="area-order-buttons"><button type="button" class="area-move" data-direction="up" aria-label="Move {{a.name}} up">↑</button><button type="button" class="area-move" data-direction="down" aria-label="Move {{a.name}} down">↓</button></div>
-    <form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="archive-button">Archive</button></form>
-  </div>
-  {% set insight = rhythmos_insights.get(a.id) %}
-  {% if insight %}<details class="rhythmos-audify"><summary>Audify {{a.name}}</summary><div class="rhythmos-audify-body"><p><strong>{{insight.total}}</strong> recorded Beats · <strong>{{insight.accents}}</strong> Accents</p><p>Past 7 days: {{insight.recent}} recorded · Previous 7 days: {{insight.previous}} recorded</p><p class="insight-note">This reflects only what you recorded, not everything that happened in this part of your life.</p><a href="{{url_for('history',area=a.id)}}#beats">See {{a.name}} Beats →</a></div></details>{% endif %}
-{% endfor %}
+<article class="rhythmos-card" id="rhythmos-{{a.id}}">
+  <div><h3>{{a.name}}</h3>{% set insight = rhythmos_insights.get(a.id) %}<p>{{insight.total if insight else 0}} recorded Beats</p></div>
+  <div class="rhythmos-card-actions"><a class="secondary" href="{{url_for('history',area=a.id)}}#beats">See Beats</a><a class="primary" href="{{url_for('history',area=a.id)}}">Explore in Audify <span aria-hidden="true">→</span></a></div>
+</article>
+{% else %}<div class="card"><h3>Your Rhythmos begin here</h3><p>Create a dimension of your life, such as Family, Work, or a particular relationship. You can record Beats before choosing one.</p><a href="#manage-rhythmos" class="primary">Create a Rhythmos</a></div>{% endfor %}
 </div>
-
-{% set archived = areas|selectattr("active","equalto",false)|list %}
-{% if archived %}
-<details class="archived-areas">
-  <summary>Archived Rhythmos <span>{{archived|length}}</span></summary>
-  <div class="life-area-list archived-list">
-  {% for a in archived %}
-    <div class="life-area-item">
-      <span class="drag-handle drag-placeholder">☰</span>
-      <strong>{{a.name}}</strong>
-      <form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="restore-button">Restore</button></form>
-    </div>
-  {% endfor %}
-  </div>
+</section>
+<p class="rhythmos-next"><a href="{{url_for('history')}}">Explore your overall rhythm in Audify →</a></p>
+<details class="rhythmos-manage" id="manage-rhythmos"><summary>Manage Rhythmos</summary>
+<p class="lede">Add, reorder, or archive dimensions of your life. These controls don't change your recorded Beats.</p>
+<div class="life-area-examples"><span class="life-area-examples-label">Your Rhythmos could include</span><div class="area-summary">
+{% for example in ["A hobby", "A side hustle", "One important relationship", "A cause or nonprofit you support"] %}
+<button class="area-pill area-example" type="button" data-example="{{example}}">{{example}}</button>{% endfor %}
+</div></div>
+<form method="post" action="{{url_for('goals')}}" class="inline-form"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><input id="new-life-area" name="name" required placeholder="New Rhythmos" aria-label="Name a new Rhythmos"><button>Add</button></form>
+<p class="life-area-note">Use arrows or drag to change the order.</p><p id="area-order-status" role="status" aria-live="polite"></p>
+<div class="life-area-list" id="life-area-list">
+{% for a in areas if a.active %}<div class="life-area-item" draggable="true" data-area-id="{{a.id}}"><button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">≡</button><strong>{{a.name}}</strong><div class="area-order-buttons"><button type="button" class="area-move" data-direction="up" aria-label="Move {{a.name}} up">↑</button><button type="button" class="area-move" data-direction="down" aria-label="Move {{a.name}} down">↓</button></div><form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="archive-button">Archive</button></form></div>{% endfor %}
+</div>
+{% set archived = areas|selectattr("active","equalto",false)|list %}{% if archived %}<details class="archived-areas"><summary>Archived Rhythmos ({{archived|length}})</summary>{% for a in archived %}<div class="life-area-item"><strong>{{a.name}}</strong><form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="restore-button">Restore</button></form></div>{% endfor %}</details>{% endif %}
 </details>
-{% endif %}
-
-
-{% if legacy_goals %}
-<details class="legacy-intentions card"><summary>Previously saved intentions ({{legacy_goals|length}})</summary>
-<p class="insight-note">These are optional intentions you created under the earlier Rhythmos design. They are preserved separately from your Rhythmos.</p>
-{% for g in legacy_goals %}
-<article class="goal-row {{'goal-archived' if not g.active}}"><div><span class="goal-area">{{g.life_area.name if g.life_area else 'Uncategorized'}}</span><b>{{g.intention}}</b>{% if g.target %}<small>{{g.target}}</small>{% endif %}</div><form method="post" action="{{url_for('toggle_goal',goal_id=g.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="{{'archive-button' if g.active else 'restore-button'}}">{{'Archive' if g.active else 'Restore'}}</button></form></article>
-{% endfor %}
-</details>
-{% endif %}
+{% if legacy_goals %}<details class="legacy-intentions card"><summary>Previously saved intentions ({{legacy_goals|length}})</summary><p class="insight-note">Preserved from the earlier design, separate from your Rhythmos.</p>{% for g in legacy_goals %}<article class="goal-row {{'goal-archived' if not g.active}}"><div><span class="goal-area">{{g.life_area.name if g.life_area else 'Uncategorized'}}</span><b>{{g.intention}}</b>{% if g.target %}<small>{{g.target}}</small>{% endif %}</div><form method="post" action="{{url_for('toggle_goal',goal_id=g.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button>{{'Archive' if g.active else 'Restore'}}</button></form></article>{% endfor %}</details>{% endif %}
 <script>
 (() => {
   const input = document.getElementById('new-life-area');
