@@ -170,6 +170,13 @@ def create_app():
         recent = SumEntry.query.filter_by(
             user_id=current_user.id, occurred_on=today
         ).order_by(SumEntry.archived.asc(), SumEntry.logged_at.desc()).all()
+        today_rhythmos = {}
+        for beat in recent:
+            if not beat.archived and beat.life_area:
+                today_rhythmos[beat.life_area.id] = {
+                    "name": beat.life_area.name,
+                    "count": today_rhythmos.get(beat.life_area.id, {}).get("count", 0) + 1,
+                }
         return render_template(
             "home.html",
             today_count=today_count,
@@ -177,6 +184,7 @@ def create_app():
             yesterday_count=yesterday_count,
             yesterday_accents=yesterday_accents,
             recent=recent,
+            today_rhythmos=today_rhythmos,
         )
 
     @app.post("/silk/preferences")
