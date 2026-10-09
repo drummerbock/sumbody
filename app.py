@@ -297,9 +297,12 @@ def create_app():
             user_id=current_user.id
         ).order_by(LifeArea.sort_order, LifeArea.name).all()
 
+        selected_area = LifeArea.query.filter_by(id=area, user_id=current_user.id).first() if area else None
         insight_entries = SumEntry.query.filter_by(
             user_id=current_user.id, archived=False
         ).all()
+        if selected_area:
+            insight_entries = [entry for entry in insight_entries if entry.life_area_id == selected_area.id]
         insight_total_count = len(insight_entries)
         insight_accent_count = sum(1 for e in insight_entries if e.accented)
         by_area = db.session.query(
@@ -310,7 +313,9 @@ def create_app():
             SumEntry.user_id == current_user.id,
             SumEntry.archived.is_(False),
         ).group_by(LifeArea.id).order_by(func.count(SumEntry.id).desc()).all()
-        unassigned_count = SumEntry.query.filter_by(user_id=current_user.id, archived=False, life_area_id=None).count()
+        if selected_area:
+            by_area = [row for row in by_area if row[0] == selected_area.name]
+        unassigned_count = sum(1 for entry in insight_entries if entry.life_area_id is None)
         days = db.session.query(
             SumEntry.occurred_on,
             func.count(SumEntry.id),
@@ -318,6 +323,8 @@ def create_app():
         ).filter_by(
             user_id=current_user.id, archived=False
         ).group_by(SumEntry.occurred_on).all()
+        if selected_area:
+            days = [(day, sum(1 for entry in insight_entries if entry.occurred_on == day), sum(1 for entry in insight_entries if entry.occurred_on == day and entry.accented)) for day in {entry.occurred_on for entry in insight_entries}]
         most_active = max(days, key=lambda x: x[1]) if days else None
         most_accented = max(days, key=lambda x: x[2] or 0) if days else None
         # Audify visualizations are strictly descriptive: only user-recorded Beats.
@@ -352,6 +359,7 @@ def create_app():
             accent_count=accent_count,
             areas=areas,
             archived_view=archived_view,
+            selected_area=selected_area,
             insight_total_count=insight_total_count,
             insight_accent_count=insight_accent_count,
             by_area=by_area,
