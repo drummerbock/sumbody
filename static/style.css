@@ -339,3 +339,36 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
 .swipe-beat.swipe-archive-visible .entry-actions .archive-button{outline:2px solid #b74434;outline-offset:3px}
 .swipe-beat.swipe-edit-visible .swipe-hint,.swipe-beat.swipe-archive-visible .swipe-hint{display:block;font-size:.75rem;opacity:.65}
 }
+
+/* Recorder and Today action alignment: repair legacy styles without changing data. */
+#silk-settings[hidden],#silk-options[hidden],[data-silk-field][hidden]{display:none!important}
+#silk-settings{box-sizing:border-box;width:100%;border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 0;min-width:0}
+#silk-settings legend{font-size:12px;font-weight:750;padding:0 6px}
+.silk-pref-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+#silk-settings .silk-pref{display:flex;align-items:center;gap:9px;min-width:0;margin:0;line-height:1.4;font-size:13px;cursor:pointer}
+#silk-settings .silk-pref input{position:static;opacity:1;pointer-events:auto;width:16px;height:16px;flex:none;margin:0;accent-color:#b74434}
+#silk-settings .silk-pref span{display:block;min-width:0;overflow-wrap:anywhere}
+.silk-detail-panel .quick-control-label small{display:none}
+.silk-detail-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.silk-detail-row>.rapid-accent-toggle,.silk-detail-row>.quick-date{box-sizing:border-box;min-height:52px;width:100%;font-size:13px;font-weight:700;line-height:1.25;padding:10px 12px}
+.silk-detail-row>.rapid-accent-toggle .accent-mark{font-size:19px}
+.silk-detail-row>.quick-date input{font-size:13px;min-height:34px;flex:1}
+.quick-meta #silk-settings-toggle{display:block;margin-left:auto}
+.day-ledger .beat-row{display:grid;grid-template-columns:minmax(0,1fr) 54px 142px;gap:12px;align-items:center}
+.day-ledger .beat-row .entry-copy{display:contents}
+.day-ledger .beat-row .beat-text-accent{display:contents}
+.day-ledger .beat-row .beat-text-accent>b{grid-column:1;grid-row:1}
+.day-ledger .beat-row .entry-copy>span{grid-column:1;grid-row:2}
+.day-ledger .beat-row .accent-form{grid-column:2;grid-row:1 / span 2;justify-self:center}
+.day-ledger .beat-row .entry-actions{grid-column:3;grid-row:1 / span 2;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+.day-ledger .beat-row .entry-actions>a,.day-ledger .beat-row .entry-actions button{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;min-width:0;min-height:40px;padding:8px 6px;font-family:inherit;font-size:12px;font-weight:700;line-height:1.2;text-decoration:none}
+.day-ledger .beat-row .accent-button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;min-width:44px;padding:0;font-size:18px}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:700px){
+ .silk-detail-row{grid-template-columns:1fr}
+ .day-ledger .beat-row{grid-template-columns:minmax(0,1fr) 44px 120px;gap:6px}
+ .day-ledger .beat-row .entry-actions{gap:4px}
+ .day-ledger .beat-row .entry-actions>a,.day-ledger .beat-row .entry-actions button{font-size:11px;padding:7px 3px;min-height:44px}
+ #silk-settings .silk-pref-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:370px){.day-ledger .beat-row{grid-template-columns:minmax(0,1fr) 44px 104px}}
