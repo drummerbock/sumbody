@@ -3,8 +3,8 @@
 {% block content %}
 <div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div>
 <h1>Audify{% if selected_area %}: {{selected_area.name}}{% endif %}</h1>
-<p class="lede">Explore patterns in what you have recorded. These are observations, not a measure of your worth or everything you have done.</p>
-<div class="audify-context"><form method="get" action="{{url_for('history')}}" class="audify-scope"><label for="audify-area">Listen to</label><select id="audify-area" name="area" onchange="this.form.submit()"><option value="">Your overall rhythm</option>{% for a in areas %}<option value="{{a.id}}" {% if selected_area and selected_area.id == a.id %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select><noscript><button type="submit">Explore</button></noscript></form>{% if selected_area %}<a href="{{url_for('goals')}}#rhythmos-{{selected_area.id}}">Back to {{selected_area.name}} in Rhythmos →</a>{% else %}<a href="{{url_for('goals')}}">Explore your Rhythmos →</a>{% endif %}</div>
+<p class="lede">Observe and explore patterns you've recorded. These are your perceived rhythms, not a productivity map or a measure of accomplishment.</p>
+<div class="audify-context"><form method="get" action="{{url_for('history')}}" class="audify-scope"><label for="audify-area">Explore rhythm</label><select id="audify-area" name="area" onchange="this.form.submit()"><option value="">Your overall rhythm</option>{% for a in areas %}<option value="{{a.id}}" {% if selected_area and selected_area.id == a.id %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select><noscript><button type="submit">Explore</button></noscript></form>{% if selected_area %}<a href="{{url_for('goals')}}#rhythmos-{{selected_area.id}}">{{selected_area.name}} in Rhythmos →</a>{% else %}<a href="{{url_for('goals')}}">View Rhythmos →</a>{% endif %}</div>
 <p class="term-hint"><strong>Audify</strong> is where your accumulated actions become perceptible. <a href="{{url_for('musical_language')}}">Explore the musical language.</a></p>
 
 <section class="audify-insights">
@@ -25,17 +25,17 @@
     </div>
     <div class="insight-timeline card">
       <div class="section-head"><h3>Past seven days</h3><span>Recorded Beats, not a measure of your day</span></div>
-      <div class="audify-bars" role="img" aria-label="Recorded Beats over the past seven days: {% for day in timeline %}{{day.date}}: {{day.count}}{% if not loop.last %}, {% endif %}{% endfor %}">
+      <div class="audify-bars" role="img" aria-label="Recorded Beats and Accents over the past seven days: {% for day in timeline %}{{day.date}}: {{day.count}} Beats, {{day.accents}} Accents{% if not loop.last %}, {% endif %}{% endfor %}">
         {% for day in timeline %}
-        <div class="audify-day"><span class="audify-bar-track"><span class="audify-bar-fill" style="height:{{(day.count / max_day_count * 100)|round|int if max_day_count else 0}}%"></span></span><b>{{day.count}}</b><small>{{day.label}}</small></div>
+        <div class="audify-day"><span class="audify-bar-track"><span class="audify-bar-fill" style="height:{{(day.count / max_day_count * 100)|round|int if max_day_count else 0}}%"><span class="audify-accent-segment" style="height:{{(day.accents / day.count * 100)|round|int if day.count else 0}}%"></span></span></span><b>{{day.count}}</b><small>{{day.label}}</small></div>
         {% endfor %}
       </div>
-      <p class="insight-note">A day without a recorded Beat is simply a day without a record.</p>
+      <p class="insight-note"><span class="audify-legend-swatch"></span> Accents are highlighted within the total Beats, not added on top. A day without a recorded Beat is simply a day without a record.</p>
     </div>
   </div>
   <div class="two-col audify-discovery">
     <section class="card">
-      <h3>{% if selected_area %}Beats within {{selected_area.name}}{% else %}Beats across your Rhythmos{% endif %}</h3>
+{% if selected_area %}<h3>How your recorded rhythm develops</h3><p class="insight-note">The seven-day chart above shows the pace and emphasis of your recorded Beats within {{selected_area.name}}. Explore individual moments below to understand the pattern.</p><a href="#beats" class="secondary">See {{selected_area.name}} Beats →</a>{% else %}      <h3>{% if selected_area %}Beats within {{selected_area.name}}{% else %}Beats across your Rhythmos{% endif %}</h3>
       <p class="insight-note">Of {{insight_total_count}} unarchived Beats. These are only moments you chose to record.</p>
       {% for area in insight_area_rows %}
       <div class="insight-area">
@@ -43,6 +43,7 @@
         <div class="insight-track" role="img" aria-label="{{area.name}}: {{area.count}} of {{insight_total_count}} recorded Beats"><span style="width:{{(area.count / max_area_count * 100)|round|int if max_area_count else 0}}%"></span></div>
       </div>
       {% endfor %}
+{% endif %}
     </section>
     <section class="card">
       <h3>What you've emphasized</h3>

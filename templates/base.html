@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261008-rhythm-flow') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261009-rhythm-polish') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -52,28 +52,24 @@
       <button class="quick-send" type="submit" aria-label="Add Beat">↑</button>
     </div>
 
-    <button type="button" class="details-toggle" id="silk-options-toggle" aria-expanded="false" aria-controls="silk-options">More options</button>
-    <div class="quick-controls" id="silk-options">
+    <button type="button" class="details-toggle" id="silk-options-toggle" aria-expanded="false" aria-controls="silk-options">Beat details <span aria-hidden="true">⌄</span></button>
+    <div class="silk-detail-panel quick-controls" id="silk-options">
       <div class="quick-control-group quick-area-group" data-silk-field="area">
-        <span class="quick-control-label">Rhythmos (optional)</span>
+        <span class="quick-control-label">Rhythmos <small>Where does this moment belong?</small></span>
         <div class="quick-area-chips"><label class="quick-choice"><input type="radio" name="life_area_id" value="" checked><span>Decide later</span></label>
-          {% for a in composer_areas %}
-          <label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}"><span>{{a.name}}</span></label>
-          {% endfor %}
+          {% for a in composer_areas %}<label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}"><span>{{a.name}}</span></label>{% endfor %}
         </div>
       </div>
-
-    </div>
-
-    <div class="quick-meta">
-
-      <label class="rapid-accent-toggle" data-silk-field="accent"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Emphasize this Beat (optional)</span></label>
-
+      <div class="silk-detail-row">
+        <label class="rapid-accent-toggle" data-silk-field="accent"><input type="checkbox" name="accented" value="yes"><span class="accent-mark">&gt;</span><span>Accent this Beat</span></label>
+        <label class="quick-date" data-silk-field="date"><span>Date</span><input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
+      </div>
       <div class="quick-details" id="quick-details">
         <label class="share-toggle" data-silk-field="shared"><input type="checkbox" name="communicated" value="yes"><span class="toggle-ui"></span><span>Shared with someone</span></label>
-        <label class="quick-date" data-silk-field="date">Date <input type="date" name="occurred_on" value="{{today.isoformat()}}" required></label>
       </div>
-      <div id="silk-settings" hidden><p>Show by default</p>{% for key,label in [("area","Life Area"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %} > {{label}}</label>{% endfor %}<span id="silk-pref-status" aria-live="polite"></span></div>
+    </div>
+    <div class="quick-meta">
+      <div id="silk-settings" hidden><p>Show by default</p>{% for key,label in [("area","Rhythmos"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %}> {{label}}</label>{% endfor %}<span id="silk-pref-status" aria-live="polite"></span></div>
       <button type="button" class="details-toggle" id="silk-settings-toggle">Customize defaults</button>
       <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
