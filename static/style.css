@@ -306,3 +306,16 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
  .rhythmos-card-actions a{flex:1}
  .audify-context,.audify-scope{align-items:stretch;flex-direction:column}
 }
+
+.hero h1{font-size:clamp(2.3rem,5vw,4.25rem);line-height:1.1}
+.today-rhythm-links a{background:transparent;border-radius:10px;box-shadow:none}
+.today-rhythm-links a strong{font-size:.95rem}.today-rhythm-links a span{font-size:.8rem;opacity:.75}
+.rhythm-bridge-next{font-size:.9rem;text-underline-offset:4px}
+.manage-rhythmos-link{display:inline-flex;align-items:center;min-height:44px;margin-top:12px}
+.audify-scope{padding:8px 12px;border:1px solid var(--line);border-radius:12px}
+.audify-scope select{border:0;background:transparent;min-width:170px}
+.audify-context>a{font-size:.9rem;text-decoration:underline;text-underline-offset:4px}
+.audify-bar-fill{position:relative;overflow:hidden}
+.audify-accent-segment{display:block;position:absolute;bottom:0;left:0;right:0;background:#b74434}
+.audify-legend-swatch{display:inline-block;width:11px;height:11px;border-radius:2px;background:#b74434;margin-right:5px}
+@media(max-width:700px){.hero h1{font-size:clamp(2.15rem,9vw,3.1rem)}}
