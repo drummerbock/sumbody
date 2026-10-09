@@ -19,8 +19,8 @@
 
   <div class="entries" id="today-entries">
     {% for e in recent %}
-    <article class="entry swipe-beat {{'archived-entry' if e.archived}}">
-      <div class="entry-copy"><div class="beat-text-accent"><b>{{e.description}}</b><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" title="{{'Remove accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button></form></div><span>{{e.life_area.name if e.life_area else 'No Rhythmos'}}{{' · Archived' if e.archived}}</span></div>
+    <article class="entry beat-row {{'archived-entry' if e.archived}}">
+      <div class="entry-copy"><div class="beat-text-accent"><b>{{e.description}}</b><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" title="{{'Remove accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark">&gt;</span><span class="visually-hidden">{{'Remove Accent' if e.accented else 'Accent this Beat'}}</span></button></form></div><span>{{e.life_area.name if e.life_area else 'No Rhythmos'}}{{' · Archived' if e.archived}}</span></div>
       <div class="entry-actions">
         <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a>
         <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}">
@@ -28,7 +28,6 @@
           <button class="{{'restore-button' if e.archived else 'archive-button'}}" type="submit">{{'Restore' if e.archived else 'Archive'}}</button>
         </form>
       </div>
-      <p class="swipe-hint" aria-hidden="true">Swipe left to edit · right to archive</p>
     </article>
     {% endfor %}
   </div>
@@ -38,24 +37,5 @@
   </button>
 </section>
 <section class="today-rhythm-bridge card"><div class="eyebrow">FROM BEATS TO RHYTHMOS</div><h2>Where today's moments belong</h2>{% if today_rhythmos %}<div class="today-rhythm-links">{% for id, item in today_rhythmos.items() %}<a href="{{url_for('goals')}}#rhythmos-{{id}}"><strong>{{item.name}}</strong><span>{{item.count}} {{'Beat' if item.count == 1 else 'Beats'}} <span aria-hidden="true">→</span></span></a>{% endfor %}</div>{% else %}<p class="insight-note">Your Beats can belong to a Rhythmos, or remain uncategorized. You can decide later.</p>{% endif %}<a class="rhythm-bridge-next" href="{{url_for('goals')}}">Explore the dimensions of your life →</a></section>
-<script>
-(() => {
-  document.querySelectorAll('.swipe-beat').forEach(row => {
-    let startX = 0, startY = 0;
-    row.addEventListener('touchstart', event => {
-      if (event.touches.length !== 1) return;
-      startX = event.touches[0].clientX; startY = event.touches[0].clientY;
-    }, {passive:true});
-    row.addEventListener('touchend', event => {
-      if (!startX || !event.changedTouches.length) return;
-      const dx = event.changedTouches[0].clientX - startX;
-      const dy = event.changedTouches[0].clientY - startY;
-      startX = 0;
-      if (Math.abs(dx) < 75 || Math.abs(dy) > 45 || Math.abs(dy) > Math.abs(dx) * .6) return;
-      row.classList.toggle('swipe-edit-visible', dx < 0);
-      row.classList.toggle('swipe-archive-visible', dx > 0);
-    }, {passive:true});
-  });
-})();
-</script>
+
 {% endblock %}
