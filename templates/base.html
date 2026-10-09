@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261009-rhythm-polish') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261009-recorder-fix') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -55,7 +55,7 @@
     <button type="button" class="details-toggle" id="silk-options-toggle" aria-expanded="false" aria-controls="silk-options">Beat details <span aria-hidden="true">⌄</span></button>
     <div class="silk-detail-panel quick-controls" id="silk-options">
       <div class="quick-control-group quick-area-group" data-silk-field="area">
-        <span class="quick-control-label">Rhythmos <small>Where does this moment belong?</small></span>
+        <span class="quick-control-label">Rhythmos</span>
         <div class="quick-area-chips"><label class="quick-choice"><input type="radio" name="life_area_id" value="" checked><span>Decide later</span></label>
           {% for a in composer_areas %}<label class="quick-choice"><input type="radio" name="life_area_id" value="{{a.id}}"><span>{{a.name}}</span></label>{% endfor %}
         </div>
@@ -69,7 +69,7 @@
       </div>
     </div>
     <div class="quick-meta">
-      <div id="silk-settings" hidden><p>Show by default</p>{% for key,label in [("area","Rhythmos"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %}> {{label}}</label>{% endfor %}<span id="silk-pref-status" aria-live="polite"></span></div>
+      <fieldset id="silk-settings" hidden><legend>Show by default</legend><div class="silk-pref-grid">{% for key,label in [("area","Rhythmos"),("accent","Accent"),("date","Date"),("shared","Shared with someone")] %}<label class="silk-pref"><input type="checkbox" value="{{key}}" {% if key in silk_visible_fields %}checked{% endif %}><span>{{label}}</span></label>{% endfor %}</div><span id="silk-pref-status" role="status" aria-live="polite"></span></fieldset>
       <button type="button" class="details-toggle" id="silk-settings-toggle">Customize defaults</button>
       <span class="rapid-status" id="rapid-status" aria-live="polite"></span>
     </div>
@@ -100,7 +100,7 @@
   let visibleFields = prefChecks.filter(c => c.checked).map(c => c.value);
   const renderFields = () => {
     const all = optionsToggle.getAttribute('aria-expanded') === 'true';
-    optionsPanel.hidden = !all && !visibleFields.includes('area');
+    optionsPanel.hidden = !all && !visibleFields.some(key => ['area','accent','date','shared'].includes(key));
     form.querySelectorAll('[data-silk-field]').forEach(el => {el.hidden = !all && !visibleFields.includes(el.dataset.silkField);});
     settingsToggle.hidden = !all;
   };
