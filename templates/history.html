@@ -58,53 +58,57 @@
   {% endif %}
 </section>
 
-<section class="audify-beats" id="beats">
-  <div class="section-head">
-    <div>
-      <div class="eyebrow">SEE YOUR BEATS</div>
-      <h2>The moments behind the pattern</h2>
-      <p class="lede">Search, filter, and review the individual Beats that make up your rhythm.</p>
+<section class="audify-beats beat-library" id="beats">
+  <div class="eyebrow">YOUR BEATS</div>
+  <h2>Moments you've recorded</h2>
+  <p class="beat-library-count">{{total_count}} {{'Beat' if total_count == 1 else 'Beats'}} · {{accent_count}} {{'Accent' if accent_count == 1 else 'Accents'}}</p>
+  <form id="beat-library-filters" class="beat-library-filters" method="get" action="{{url_for('history')}}#beats">
+    <label class="beat-library-search"><span class="visually-hidden">Search Beats</span><input type="search" name="q" value="{{request.args.get('q','')}}" placeholder="Search your Beats…" autocomplete="off"></label>
+    <div class="beat-library-filter-row">
+      <label class="beat-library-area"><span class="visually-hidden">Filter by Rhythmos</span><select name="area"><option value="">All Rhythmos</option>{% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select></label>
+      <details class="beat-library-advanced" {% if archived_view or request.args.get('start') or request.args.get('end') %}open{% endif %}>
+        <summary>Filters{% if archived_view or request.args.get('start') or request.args.get('end') %} · Active{% endif %}</summary>
+        <div class="beat-library-advanced-panel">
+          <label>Show <select name="archived"><option value="" {% if not archived_view %}selected{% endif %}>Active Beats</option><option value="1" {% if archived_view %}selected{% endif %}>Archived Beats</option></select></label>
+          <label>From <input type="date" name="start" value="{{request.args.get('start','')}}"></label>
+          <label>Through <input type="date" name="end" value="{{request.args.get('end','')}}"></label>
+          <button type="submit" class="secondary">Apply filters</button>
+        </div>
+      </details>
     </div>
-  </div>
-
-  <div class="view-switch">
-    <a class="{{'active' if not archived_view}}" href="{{url_for('history')}}#beats">Active Beats</a>
-    <a class="{{'active' if archived_view}}" href="{{url_for('history',archived=1)}}#beats">Archived</a>
-  </div>
-
-  <form class="filters">
-    {% if archived_view %}<input type="hidden" name="archived" value="1">{% endif %}
-    <input name="q" value="{{request.args.get('q','')}}" placeholder="Search your Beats…">
-    <select name="area">
-      <option value="">All Rhythmos</option>
-      {% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}
-    </select>
-    <input type="date" name="start" value="{{request.args.get('start','')}}">
-    <input type="date" name="end" value="{{request.args.get('end','')}}">
-    <button>Filter Beats</button>
+    {% if request.args.get('q') or request.args.get('area') or request.args.get('start') or request.args.get('end') or archived_view %}
+    <a class="beat-library-clear" href="{{url_for('history')}}#beats">Clear filters ×</a>
+    {% endif %}
+    <noscript><button type="submit">Search Beats</button></noscript>
   </form>
-
-  <div class="section-head"><h2>{{total_count}} Beats</h2><span>{{accent_count}} Accents</span></div>
-  {% if total_count > entries|length %}<p class="lede">Showing the most recent {{entries|length}} of {{total_count}} matching Beats.</p>{% endif %}
-
-  <div class="entries">
-    {% for e in entries %}
-    <article class="entry">
-      <div class="entry-copy"><b>{{e.description}}</b><span>{{e.occurred_on.strftime("%b %-d, %Y")}} · {{e.life_area.name if e.life_area else 'No Rhythmos'}}</span></div>
-      <div class="entry-actions">
-        <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a><form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}"><span class="accent-mark">&gt;</span><span class="accent-label">{{'Accented' if e.accented else 'Accent'}}</span></button>
-        </form>
-        <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="{{'restore-button' if archived_view else 'archive-button'}}" type="submit">{{'Restore' if archived_view else 'Archive'}}</button>
-        </form>
-      </div>
-    </article>
-    {% else %}
-    <div class="empty">No Beats match this view.</div>
-    {% endfor %}
+  <div class="beat-library-results" aria-live="polite">
+    {% for day, group in entry_groups %}
+    <section class="beat-library-day" aria-label="{{day.strftime('%A, %B %d, %Y')}}">
+      <h3>{{day.strftime('%A, %B %d, %Y')}}</h3>
+      {% for e in group %}
+      <article class="entry beat-library-entry">
+        <div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name if e.life_area else 'No Rhythmos'}}</span></div>
+        <div class="entry-actions">
+          <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a>
+          <form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" aria-label="{{'Remove Accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark" aria-hidden="true">&gt;</span></button></form>
+          <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="{{'restore-button' if archived_view else 'archive-button'}}" type="submit">{{'Restore' if archived_view else 'Archive'}}</button></form>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+    {% else %}<div class="empty">No Beats match this view.</div>{% endfor %}
   </div>
 </section>
+<script>
+(() => {
+  const form = document.getElementById('beat-library-filters');
+  if (!form) return;
+  const search = form.querySelector('input[name="q"]');
+  let timer;
+  const submit = () => { if (form.requestSubmit) form.requestSubmit(); else form.submit(); };
+  search.addEventListener('input', () => {clearTimeout(timer);timer=setTimeout(submit,450);});
+  form.querySelector('select[name="area"]').addEventListener('change',submit);
+  form.querySelector('select[name="archived"]').addEventListener('change',submit);
+})();
+</script>
 {% endblock %}
