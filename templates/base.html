@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261009-silk-rebuild') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261009-silk-nav') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -16,7 +16,6 @@
     <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 1-2.35-5.65L20 8"/><path d="M20 3v5h-5"/></svg></span><span>Rhythmos</span></a>
     <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V12m5 8V7m5 13V4m5 16v-9"/></svg></span><span>Audify</span></a>
   </nav>
-  {% if not (request.endpoint or '').startswith('admin') %}<button class="quick-add desktop-add" type="button" data-open-composer><span aria-hidden="true">+</span> Add Beat</button>{% endif %}
   <details class="account-menu">
     <summary aria-label="Open account menu">{{ current_user.name[:1]|upper }}</summary>
     <div class="account-menu-panel">
@@ -39,7 +38,6 @@
 <footer>
   <a class="{{'active' if request.endpoint == 'home' else ''}}" href="{{url_for('home')}}"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg></span><span>Today</span></a>
   <a class="{{'active' if request.endpoint == 'goals' else ''}}" href="{{url_for('goals')}}"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 1-2.35-5.65L20 8"/><path d="M20 3v5h-5"/></svg></span><span>Rhythmos</span></a>
-  <button class="mobile-add" type="button" data-open-composer aria-label="Add Beat">+</button>
   <a class="{{'active' if request.endpoint == 'history' else ''}}" href="{{url_for('history')}}"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V12m5 8V7m5 13V4m5 16v-9"/></svg></span><span>Audify</span></a>
   <details class="mobile-more"><summary aria-label="More navigation" aria-haspopup="true"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></span><span>More</span></summary><nav class="mobile-more-panel" aria-label="More navigation"><a href="{{url_for('onboarding')}}">How it works</a><a href="{{url_for('musical_language')}}">Musical language</a>{% if is_super_admin %}<a href="{{url_for('admin_dashboard')}}">Super Admin</a>{% endif %}<a href="{{url_for('logout')}}">Log out</a></nav></details>
 </footer>
