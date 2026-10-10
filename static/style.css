@@ -410,3 +410,10 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
  .silk-area-picker{bottom:calc(100% + 8px);max-height:min(36dvh,270px)}
 }
 @media(prefers-reduced-motion:reduce){.quick-composer,.silk-area-picker{transition:none!important}}
+
+/* Silk must never cover the mobile navigation while the keyboard is closed. */
+@media(max-width:700px){
+ .quick-composer{bottom:max(calc(80px + env(safe-area-inset-bottom)),calc(12px + var(--silk-keyboard-height,0px)))}
+ footer{z-index:30}
+ .silk-area-picker{z-index:46}
+}
