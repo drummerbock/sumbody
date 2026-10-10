@@ -300,7 +300,7 @@ def create_app():
         accent_count = q.filter(SumEntry.accented.is_(True)).count()
         entries = q.order_by(
             SumEntry.occurred_on.desc(), SumEntry.logged_at.desc()
-        ).limit(500).all()
+        ).all()
         areas = LifeArea.query.filter_by(
             user_id=current_user.id
         ).order_by(LifeArea.sort_order, LifeArea.name).all()
@@ -360,9 +360,12 @@ def create_app():
         communicated = sum(1 for e in insight_entries if e.communicated is True)
         comm_known = sum(1 for e in insight_entries if e.communicated is not None)
 
+        from itertools import groupby
+        entry_groups = [(day, list(group)) for day, group in groupby(entries, key=lambda e: e.occurred_on)]
         return render_template(
             "history.html",
             entries=entries,
+            entry_groups=entry_groups,
             total_count=total_count,
             accent_count=accent_count,
             areas=areas,

@@ -42,7 +42,7 @@
   <details class="mobile-more"><summary aria-label="More navigation" aria-haspopup="true"><span class="nav-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></span><span>More</span></summary><nav class="mobile-more-panel" aria-label="More navigation"><a href="{{url_for('onboarding')}}">How it works</a><a href="{{url_for('musical_language')}}">Musical language</a>{% if is_super_admin %}<a href="{{url_for('admin_dashboard')}}">Super Admin</a>{% endif %}<a href="{{url_for('logout')}}">Log out</a></nav></details>
 </footer>
 
-<section class="quick-composer" aria-label="Quick Beat composer">
+<section class="quick-composer silk-resting" aria-label="Quick Beat composer">
   <form method="post" action="{{url_for('add_sum')}}" id="quick-beat-form" data-today="{{today.isoformat()}}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="quick-beat-line">
@@ -76,6 +76,14 @@
   if (!form) return;
 
   const composer = form.closest('.quick-composer');
+  const activateSilk = () => composer.classList.remove('silk-resting');
+  const restSilk = () => {
+    if (!form.querySelector('textarea').value.trim() && !form.contains(document.activeElement)) composer.classList.add('silk-resting');
+  };
+  composer.addEventListener('focusin', activateSilk);
+  composer.addEventListener('pointerdown', activateSilk);
+  composer.addEventListener('focusout', () => setTimeout(restSilk, 120));
+
   const input = document.getElementById('quick-beat-input');
   const send = form.querySelector('.quick-send');
   const status = document.getElementById('rapid-status');
