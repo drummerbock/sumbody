@@ -507,3 +507,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
 .audify-more-areas summary{cursor:pointer;color:var(--gold2);font-size:13px;font-weight:700;padding:10px 0}
 .audify-sharing{margin:12px 2px 0}
 @media(max-width:680px){.edit-beat-fields{grid-template-columns:1fr}.edit-beat-actions .primary{flex:1}.audify-kpi-grid{gap:8px}.audify-kpi-grid .insight-summary{padding:14px}.audify-insights .insight-timeline{padding:16px}.audify-discovery>.card{padding:16px}}
+
+/* Shared responsive size for Today, Rhythmos, and Audify. */
+.hero h1.page-heading, h1.page-heading{font-size:clamp(2.3rem,5vw,4.25rem);line-height:1.1;letter-spacing:-.04em}
+@media(max-width:700px){.hero h1.page-heading,h1.page-heading{font-size:clamp(2.15rem,9vw,3.1rem)}}
