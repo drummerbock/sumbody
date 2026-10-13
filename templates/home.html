@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% block content %}
 <section class="hero">
   <div class="eyebrow">{{ today.strftime("%A, %B %-d") }}</div>
-  <h1>Today's <em>Tempo.</em></h1><p class="lede">A place to notice what mattered today — including moments of listening, restraint, and rest.</p>
+  <h1 class="page-heading">Today's <em>Tempo.</em></h1><p class="lede">A place to notice what mattered today — including moments of listening, restraint, and rest.</p>
   <button class="primary hero-add" type="button" data-open-composer><span aria-hidden="true">＋</span> Record a Beat</button>
   <div class="today-total" aria-label="Your recorded Beats today">
     <div><strong id="today-tip-count">{{today_count}}</strong><span>Beats</span></div>
