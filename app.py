@@ -278,12 +278,15 @@ def create_app():
         archived_view = request.args.get("archived") == "1"
         q = SumEntry.query.filter_by(user_id=current_user.id, archived=archived_view)
         search = request.args.get("q", "").strip()
+        area_filter = request.args.get("area", "")
         area = request.args.get("area", type=int)
         start = request.args.get("start", "")
         end = request.args.get("end", "")
         if search:
             q = q.filter(SumEntry.description.ilike(f"%{search}%"))
-        if area:
+        if area_filter == "unassigned":
+            q = q.filter(SumEntry.life_area_id.is_(None))
+        elif area:
             q = q.filter(SumEntry.life_area_id == area)
         if start:
             try:
