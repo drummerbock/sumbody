@@ -59,7 +59,7 @@
   <form id="beat-library-filters" class="beat-library-filters" method="get" action="{{url_for('history')}}#beats">
     <label class="beat-library-search"><span class="visually-hidden">Search Beats</span><input type="search" name="q" value="{{request.args.get('q','')}}" placeholder="Search your Beats…" autocomplete="off"></label>
     <div class="beat-library-filter-row">
-      <label class="beat-library-area"><span class="visually-hidden">Filter by Rhythmos</span><select name="area"><option value="">All Rhythmos</option>{% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select></label>
+      <label class="beat-library-area"><span class="visually-hidden">Filter by Rhythmos</span><select name="area"><option value="">All Rhythmos</option><option value="unassigned" {% if request.args.get('area') == 'unassigned' %}selected{% endif %}>No Rhythmos</option>{% for a in areas %}<option value="{{a.id}}" {% if request.args.get('area')==a.id|string %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select></label>
       <details class="beat-library-advanced" {% if archived_view or request.args.get('start') or request.args.get('end') %}open{% endif %}>
         <summary>Filters{% if archived_view or request.args.get('start') or request.args.get('end') %} · Active{% endif %}</summary>
         <div class="beat-library-advanced-panel">
