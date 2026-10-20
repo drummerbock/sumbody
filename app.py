@@ -358,8 +358,13 @@ def create_app():
             {"name": name, "count": count, "accents": accents or 0, "created_at": area_created.get(name)}
             for name, count, accents in by_area
         ]
+        if not selected_area:
+            existing_names = {row["name"] for row in insight_area_rows}
+            for area in LifeArea.query.filter_by(user_id=current_user.id, active=True).all():
+                if area.name not in existing_names:
+                    insight_area_rows.append({"name": area.name, "count": 0, "accents": 0, "created_at": area.created_at})
         if unassigned_count:
-            insight_area_rows.append({"name": "Not categorized", "count": unassigned_count, "accents": sum(1 for entry in insight_entries if entry.life_area_id is None and entry.accented)})
+            insight_area_rows.append({"name": "Not categorized", "count": unassigned_count, "accents": sum(1 for entry in insight_entries if entry.life_area_id is None and entry.accented), "created_at": None})
         rhythmos_sort = request.args.get("sort", "newest")
         if rhythmos_sort not in {"newest", "oldest", "most"}:
             rhythmos_sort = "newest"
