@@ -529,3 +529,22 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
 .beat-details form {display:inline-flex;}
 .rhythmos-created {display:block;font-size:.68rem;font-weight:400;opacity:.65;margin-top:2px;}
 .audify-sort {display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:.8rem;}
+
+/* Mobile hotfix: override legacy stacked Rhythmos cards and Silk sizing */
+@media(max-width:767px){
+  .rhythmos-cards{gap:8px;}
+  a.rhythmos-card.rhythmos-row{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;text-align:left!important;min-height:64px!important;padding:12px 16px!important;gap:12px!important;}
+  .rhythmos-row>div{flex:1;min-width:0;}
+  .rhythmos-row h3{font-size:1rem!important;line-height:1.25!important;margin:0!important;text-align:left!important;}
+  .rhythmos-row p{font-size:.75rem!important;margin:4px 0 0!important;text-align:left!important;}
+  .rhythmos-row>span{flex:0 0 auto;font-size:1.15rem;}
+  .quick-composer{left:12px!important;right:12px!important;width:calc(100% - 24px)!important;max-width:none!important;transform:none!important;bottom:max(calc(80px + env(safe-area-inset-bottom)),calc(12px + var(--silk-keyboard-height,0px)))!important;}
+  .quick-beat-line{display:flex!important;align-items:center!important;min-width:0;gap:8px;}
+  .quick-beat-line textarea{flex:1 1 auto!important;min-width:0!important;width:0!important;resize:none;}
+  .quick-beat-line .quick-send{flex:0 0 48px!important;}
+  .silk-toolbar{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;min-width:0;}
+  .silk-toolbar>.silk-area-wrap{flex:1 1 42%;min-width:0;}
+  .silk-toolbar>.silk-accent-tool,.silk-toolbar>.silk-date-wrap{flex:0 1 29%;min-width:0;}
+  .silk-toolbar .silk-tool{min-width:0;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.76rem;}
+  footer{grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+}
