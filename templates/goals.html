@@ -3,19 +3,18 @@
 <h1 class="page-heading">Rhythmos</h1>
 <p class="lede">The dimensions of your life where your rhythm develops. Your Rhythmos could be Family, Work, a relationship, a hobby, or anything meaningful to you. It does not need to be a routine or a goal.</p>
 
-<section class="rhythmos-journey"><div class="section-head"><div><div class="eyebrow">YOUR DIMENSIONS</div><h2>Where your moments belong</h2><a class="secondary manage-rhythmos-link" href="#manage-rhythmos">Add or manage Rhythmos</a></div></div>
+<section class="rhythmos-journey"><div class="section-head"><div><div class="eyebrow">YOUR DIMENSIONS</div><h2>Where your moments belong</h2><a class="secondary manage-rhythmos-link" href="#manage-rhythmos">⚙ Manage Rhythmos</a></div></div>
 {% if request.args.get('focus') %}<p class="insight-note">Explore the Rhythmos connected to your day.</p>{% endif %}
 <div class="rhythmos-cards">
 {% for a in areas if a.active %}
-<article class="rhythmos-card" id="rhythmos-{{a.id}}">
-  <div><h3>{{a.name}}</h3>{% set insight = rhythmos_insights.get(a.id) %}<p>{{insight.total if insight else 0}} recorded Beats</p></div>
-  <div class="rhythmos-card-actions"><a class="secondary" href="{{url_for('history',area=a.id)}}#beats">See Beats</a><a class="primary" href="{{url_for('history',area=a.id)}}">Explore in Audify <span aria-hidden="true">→</span></a></div>
-</article>
+<a class="rhythmos-card rhythmos-row" id="rhythmos-{{a.id}}" href="{{url_for('history',area=a.id)}}">
+  <div><h3>{{a.name}}</h3>{% set insight = rhythmos_insights.get(a.id) %}<p>{{insight.total if insight else 0}} recorded Beats</p></div><span aria-hidden="true">→</span>
+</a>
 {% else %}<div class="card"><h3>Your Rhythmos begin here</h3><p>Create a dimension of your life, such as Family, Work, or a particular relationship. You can record Beats before choosing one.</p><a href="#manage-rhythmos" class="primary">Create a Rhythmos</a></div>{% endfor %}
 </div>
 </section>
 <p class="rhythmos-next"><a href="{{url_for('history')}}">Explore your overall rhythm in Audify →</a></p>
-<details class="rhythmos-manage" id="manage-rhythmos"><summary>Manage Rhythmos — add, reorder, or archive</summary>
+<details class="rhythmos-manage" id="manage-rhythmos"><summary>⚙ Manage Rhythmos — add, edit, reorder, archive</summary>
 <p class="lede">Add, reorder, or archive dimensions of your life. These controls don't change your recorded Beats.</p>
 <div class="life-area-examples"><span class="life-area-examples-label">Your Rhythmos could include</span><div class="area-summary">
 {% for example in ["A hobby", "A side hustle", "One important relationship", "A cause or nonprofit you support"] %}
@@ -24,11 +23,10 @@
 <form method="post" action="{{url_for('goals')}}" class="inline-form"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><input id="new-life-area" name="name" required placeholder="New Rhythmos" aria-label="Name a new Rhythmos"><button>Add</button></form>
 <p class="life-area-note">Use arrows or drag to change the order.</p><p id="area-order-status" role="status" aria-live="polite"></p>
 <div class="life-area-list" id="life-area-list">
-{% for a in areas if a.active %}<div class="life-area-item" draggable="true" data-area-id="{{a.id}}"><button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">≡</button><strong>{{a.name}}</strong><div class="area-order-buttons"><button type="button" class="area-move" data-direction="up" aria-label="Move {{a.name}} up">↑</button><button type="button" class="area-move" data-direction="down" aria-label="Move {{a.name}} down">↓</button></div><form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="archive-button">Archive</button></form></div>{% endfor %}
+{% for a in areas if a.active %}<div class="life-area-item" draggable="true" data-area-id="{{a.id}}"><button class="drag-handle" type="button" aria-label="Drag {{a.name}}" title="Drag to reorder">≡</button><form method="post" action="{{url_for('rename_area',area_id=a.id)}}" class="rhythmos-rename"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><input name="name" value="{{a.name}}" required maxlength="120" aria-label="Rename {{a.name}}"><button type="submit" class="secondary">Save</button></form><div class="area-order-buttons"><button type="button" class="area-move" data-direction="up" aria-label="Move {{a.name}} up">↑</button><button type="button" class="area-move" data-direction="down" aria-label="Move {{a.name}} down">↓</button></div><form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="archive-button">Archive</button></form></div>{% endfor %}
 </div>
 {% set archived = areas|selectattr("active","equalto",false)|list %}{% if archived %}<details class="archived-areas"><summary>Archived Rhythmos ({{archived|length}})</summary>{% for a in archived %}<div class="life-area-item"><strong>{{a.name}}</strong><form method="post" action="{{url_for('toggle_area',area_id=a.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="restore-button">Restore</button></form></div>{% endfor %}</details>{% endif %}
 </details>
-{% if legacy_goals %}<details class="legacy-intentions card"><summary>Previously saved intentions ({{legacy_goals|length}})</summary><p class="insight-note">Preserved from the earlier design, separate from your Rhythmos.</p>{% for g in legacy_goals %}<article class="goal-row {{'goal-archived' if not g.active}}"><div><span class="goal-area">{{g.life_area.name if g.life_area else 'Uncategorized'}}</span><b>{{g.intention}}</b>{% if g.target %}<small>{{g.target}}</small>{% endif %}</div><form method="post" action="{{url_for('toggle_goal',goal_id=g.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button>{{'Archive' if g.active else 'Restore'}}</button></form></article>{% endfor %}</details>{% endif %}
 <script>
 (() => {
   const input = document.getElementById('new-life-area');

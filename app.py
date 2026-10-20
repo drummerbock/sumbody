@@ -150,6 +150,8 @@ def create_app():
         context = {"today": local_today(), "composer_areas": [], "is_super_admin": current_user_is_super_admin(), "silk_visible_fields": []}
         if current_user.is_authenticated:
             context["silk_visible_fields"] = [x for x in (current_user.silk_visible_fields or "").split(",") if x in ("area", "accent", "date", "shared")]
+            recent_area = SumEntry.query.filter_by(user_id=current_user.id).order_by(SumEntry.logged_at.desc()).first()
+            context["last_composer_area_id"] = recent_area.life_area_id if recent_area else None
             context["composer_areas"] = LifeArea.query.filter_by(
                 user_id=current_user.id, active=True
             ).order_by(LifeArea.sort_order, LifeArea.name).all()
@@ -351,13 +353,25 @@ def create_app():
                 "count": len(day_entries),
                 "accents": sum(1 for entry in day_entries if entry.accented),
             })
+        area_created = {area.name: area.created_at for area in LifeArea.query.filter_by(user_id=current_user.id).all()}
         insight_area_rows = [
-            {"name": name, "count": count, "accents": accents or 0}
+            {"name": name, "count": count, "accents": accents or 0, "created_at": area_created.get(name)}
             for name, count, accents in by_area
         ]
+        if not selected_area:
+            existing_names = {row["name"] for row in insight_area_rows}
+            for area in LifeArea.query.filter_by(user_id=current_user.id, active=True).all():
+                if area.name not in existing_names:
+                    insight_area_rows.append({"name": area.name, "count": 0, "accents": 0, "created_at": area.created_at})
         if unassigned_count:
-            insight_area_rows.append({"name": "Not categorized", "count": unassigned_count, "accents": sum(1 for entry in insight_entries if entry.life_area_id is None and entry.accented)})
-        insight_area_rows.sort(key=lambda row: (-row["count"], row["name"]))
+            insight_area_rows.append({"name": "Not categorized", "count": unassigned_count, "accents": sum(1 for entry in insight_entries if entry.life_area_id is None and entry.accented), "created_at": None})
+        rhythmos_sort = request.args.get("sort", "newest")
+        if rhythmos_sort not in {"newest", "oldest", "most"}:
+            rhythmos_sort = "newest"
+        if rhythmos_sort == "most":
+            insight_area_rows.sort(key=lambda row: (-row["count"], row["name"]))
+        else:
+            insight_area_rows.sort(key=lambda row: (row["created_at"] or datetime.min, row["name"]), reverse=rhythmos_sort == "newest")
         max_area_count = max((row["count"] for row in insight_area_rows), default=0)
         max_day_count = max((day["count"] for day in timeline), default=0)
         communicated = sum(1 for e in insight_entries if e.communicated is True)
@@ -378,6 +392,7 @@ def create_app():
             insight_accent_count=insight_accent_count,
             by_area=by_area,
             insight_area_rows=insight_area_rows,
+            rhythmos_sort=rhythmos_sort,
             max_area_count=max_area_count,
             timeline=timeline,
             max_day_count=max_day_count,
@@ -400,6 +415,20 @@ def create_app():
         if request.method == "POST":
             return goals()
         return redirect(url_for("goals"))
+
+    @app.post("/areas/<int:area_id>/rename")
+    @login_required
+    def rename_area(area_id):
+        area = LifeArea.query.filter_by(id=area_id, user_id=current_user.id).first_or_404()
+        name = (request.form.get("name") or "").strip()
+        if not name or len(name) > 120:
+            flash("Enter a Rhythmos name of up to 120 characters.", "error")
+        elif LifeArea.query.filter(LifeArea.user_id == current_user.id, LifeArea.id != area.id, func.lower(LifeArea.name) == name.lower()).first():
+            flash("A Rhythmos with that name already exists.", "error")
+        else:
+            area.name = name
+            db.session.commit()
+        return redirect(url_for("goals") + "#manage-rhythmos")
 
     @app.post("/areas/<int:area_id>/toggle")
     @login_required

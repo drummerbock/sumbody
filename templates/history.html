@@ -3,9 +3,9 @@
 {% block content %}
 <div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div>
 <h1 class="page-heading">Audify{% if selected_area %}: {{selected_area.name}}{% endif %}</h1>
-<p class="lede">Discover what your rhythm reveals through the moments you've recorded.</p>
+
 <div class="audify-context"><form method="get" action="{{url_for('history')}}" class="audify-scope"><label for="audify-area">Explore rhythm</label><select id="audify-area" name="area" onchange="this.form.submit()"><option value="">Your overall rhythm</option>{% for a in areas %}<option value="{{a.id}}" {% if selected_area and selected_area.id == a.id %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select><noscript><button type="submit">Explore</button></noscript></form>{% if selected_area %}<a href="{{url_for('goals')}}#rhythmos-{{selected_area.id}}">{{selected_area.name}} in Rhythmos →</a>{% else %}<a href="{{url_for('goals')}}">View Rhythmos →</a>{% endif %}</div>
-<p class="term-hint"><strong>Audify</strong> is where your accumulated actions become perceptible. <a href="{{url_for('musical_language')}}">Explore the musical language.</a></p>
+
 
 <section class="audify-insights">
   <div class="section-head audify-insights-head">
@@ -35,10 +35,11 @@
     <section class="card">
 {% if selected_area %}<h3>How your recorded rhythm develops</h3><p class="insight-note">The seven-day chart above shows the pace and emphasis of your recorded Beats within {{selected_area.name}}. Explore individual moments below to understand the pattern.</p><a href="#beats" class="secondary">See {{selected_area.name}} Beats →</a>{% else %}      <h3>{% if selected_area %}Beats within {{selected_area.name}}{% else %}Beats across your Rhythmos{% endif %}</h3>
       
+      <form method="get" action="{{url_for('history')}}" class="audify-sort"><label for="rhythmos-sort">Sort Rhythmos</label><select id="rhythmos-sort" name="sort" onchange="this.form.submit()"><option value="newest" {{'selected' if rhythmos_sort == 'newest'}}>Newest</option><option value="oldest" {{'selected' if rhythmos_sort == 'oldest'}}>Oldest</option><option value="most" {{'selected' if rhythmos_sort == 'most'}}>Most Beats</option></select>{% if selected_area %}<input type="hidden" name="area" value="{{selected_area.id}}">{% endif %}</form>
       {% for area in insight_area_rows %}
       {% if loop.index == 7 %}<details class="audify-more-areas"><summary>Show all Rhythmos</summary>{% endif %}
       <div class="insight-area">
-        <div class="insight-area-label"><b>{{area.name}}</b><span>{{area.count}} · {{(area.count / insight_total_count * 100)|round|int}}%</span></div>
+        <div class="insight-area-label"><b>{{area.name}}{% if area.created_at %}<small class="rhythmos-created">Created {{area.created_at.strftime('%b %-d, %Y')}}</small>{% endif %}</b><span>{{area.count}} · {{(area.count / insight_total_count * 100)|round|int}}%</span></div>
         <div class="insight-track" role="img" aria-label="{{area.name}}: {{area.count}} of {{insight_total_count}} recorded Beats"><span style="width:{{(area.count / max_area_count * 100)|round|int if max_area_count else 0}}%"></span></div>
       </div>
       {% endfor %}

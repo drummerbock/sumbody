@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#11110f">
   <title>{% block title %}I Am · Becoming the Heartbeat{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261013-shared-headings') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='style.css',v='20261020-ux-refinement') }}">
 </head>
 <body class="{{ 'authenticated-page' if current_user.is_authenticated else '' }}">
 <header class="topbar">
@@ -106,6 +106,12 @@
     areaPicker.hidden = !open;
     areaToggle.setAttribute('aria-expanded', String(open));
   });
+  const lastArea = {{ last_composer_area_id|default('none')|tojson }};
+  const rememberedArea = areaInputs.find(radio => radio.value === String(lastArea));
+  if (rememberedArea) {
+    rememberedArea.checked = true;
+    areaLabel.textContent = rememberedArea.closest('label').querySelector('span').textContent;
+  }
   areaInputs.forEach(radio => radio.addEventListener('change', () => {
     areaLabel.textContent = radio.closest('label').querySelector('span').textContent;
     closeArea();
@@ -193,8 +199,12 @@
     edit.className = 'secondary';
     edit.href = '/sum/' + entry.id + '/edit';
     edit.textContent = 'Edit';
-    actions.append(edit, archiveForm);
-    article.append(copy, actions);
+    const details = document.createElement('details');
+    details.className = 'beat-details';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Beat details';
+    details.append(summary, edit, archiveForm);
+    article.append(copy, details);
     entries.prepend(article);
     if (empty) empty.hidden = true;
   };
@@ -266,9 +276,7 @@
 
       input.value = '';
       input.placeholder = 'A moment you want to remember…';
-      const noArea = form.querySelector('input[name="life_area_id"][value=""]');
-      if (noArea) noArea.checked = true;
-      areaLabel.textContent = 'Decide later';
+      // Preserve the chosen Rhythmos for consecutive Rapid Fire entries.
       closeArea();
       input.style.height = 'auto';
 
