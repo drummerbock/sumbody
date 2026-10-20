@@ -411,6 +411,20 @@ def create_app():
             return goals()
         return redirect(url_for("goals"))
 
+    @app.post("/areas/<int:area_id>/rename")
+    @login_required
+    def rename_area(area_id):
+        area = LifeArea.query.filter_by(id=area_id, user_id=current_user.id).first_or_404()
+        name = (request.form.get("name") or "").strip()
+        if not name or len(name) > 120:
+            flash("Enter a Rhythmos name of up to 120 characters.", "error")
+        elif LifeArea.query.filter(LifeArea.user_id == current_user.id, LifeArea.id != area.id, func.lower(LifeArea.name) == name.lower()).first():
+            flash("A Rhythmos with that name already exists.", "error")
+        else:
+            area.name = name
+            db.session.commit()
+        return redirect(url_for("goals") + "#manage-rhythmos")
+
     @app.post("/areas/<int:area_id>/toggle")
     @login_required
     def toggle_area(area_id):
