@@ -318,16 +318,48 @@ def create_app():
             insight_entries = [entry for entry in insight_entries if entry.life_area_id == selected_area.id]
         insight_total_count = len(insight_entries)
         insight_accent_count = sum(1 for e in insight_entries if e.accented)
-        by_area = db.session.query(
-            LifeArea.name,
-            func.count(SumEntry.id),
-            func.sum(case((SumEntry.accented.is_(True), 1), else_=0)),
-        ).join(SumEntry).filter(
-            SumEntry.user_id == current_user.id,
-            SumEntry.archived.is_(False),
-        ).group_by(LifeArea.id).order_by(func.count(SumEntry.id).desc()).all()
+
+        # The Rhythmos distribution chart has its own optional date range so users
+        # can change that view without changing the Beat library filters below.
+        chart_start = request.args.get("chart_start", "").strip()
+        chart_end = request.args.get("chart_end", "").strip()
+        try:
+            chart_start_date = datetime.strptime(chart_start, "%Y-%m-%d").date() if chart_start else None
+        except ValueError:
+            chart_start_date = None
+            chart_start = ""
+        try:
+            chart_end_date = datetime.strptime(chart_end, "%Y-%m-%d").date() if chart_end else None
+        except ValueError:
+            chart_end_date = None
+            chart_end = ""
+
+        chart_entries = SumEntry.query.filter_by(
+            user_id=current_user.id, archived=False
+        ).all()
+        if chart_start_date:
+            chart_entries = [entry for entry in chart_entries if entry.occurred_on >= chart_start_date]
+        if chart_end_date:
+            chart_entries = [entry for entry in chart_entries if entry.occurred_on <= chart_end_date]
         if selected_area:
-            by_area = [row for row in by_area if row[0] == selected_area.name]
+            chart_entries = [entry for entry in chart_entries if entry.life_area_id == selected_area.id]
+
+        chart_total_count = len(chart_entries)
+        chart_unassigned_count = sum(1 for entry in chart_entries if entry.life_area_id is None)
+        area_lookup = {item.id: item for item in areas}
+        chart_area_counts = {}
+        for entry in chart_entries:
+            chart_area = area_lookup.get(entry.life_area_id)
+            if not chart_area:
+                continue
+            row = chart_area_counts.setdefault(chart_area.id, {"name": chart_area.name, "count": 0, "accents": 0})
+            row["count"] += 1
+            if entry.accented:
+                row["accents"] += 1
+        by_area = [
+            (row["name"], row["count"], row["accents"])
+            for row in sorted(chart_area_counts.values(), key=lambda item: (-item["count"], item["name"]))
+        ]
         unassigned_count = sum(1 for entry in insight_entries if entry.life_area_id is None)
         days = db.session.query(
             SumEntry.occurred_on,
@@ -363,8 +395,8 @@ def create_app():
             for area in LifeArea.query.filter_by(user_id=current_user.id, active=True).all():
                 if area.name not in existing_names:
                     insight_area_rows.append({"name": area.name, "count": 0, "accents": 0, "created_at": area.created_at})
-        if unassigned_count:
-            insight_area_rows.append({"name": "Not categorized", "count": unassigned_count, "accents": sum(1 for entry in insight_entries if entry.life_area_id is None and entry.accented), "created_at": None})
+        if chart_unassigned_count:
+            insight_area_rows.append({"name": "Not categorized", "count": chart_unassigned_count, "accents": sum(1 for entry in chart_entries if entry.life_area_id is None and entry.accented), "created_at": None})
         rhythmos_sort = request.args.get("sort", "newest")
         if rhythmos_sort not in {"newest", "oldest", "most"}:
             rhythmos_sort = "newest"
@@ -393,6 +425,9 @@ def create_app():
             by_area=by_area,
             insight_area_rows=insight_area_rows,
             rhythmos_sort=rhythmos_sort,
+            chart_total_count=chart_total_count,
+            chart_start=chart_start,
+            chart_end=chart_end,
             max_area_count=max_area_count,
             timeline=timeline,
             max_day_count=max_day_count,
