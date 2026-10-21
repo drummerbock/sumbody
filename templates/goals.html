@@ -3,7 +3,7 @@
 <h1 class="page-heading">Rhythmos</h1>
 <p class="lede">The dimensions of your life where your rhythm develops. Your Rhythmos could be Family, Work, a relationship, a hobby, or anything meaningful to you. It does not need to be a routine or a goal.</p>
 
-<section class="rhythmos-journey"><div class="section-head"><div><div class="eyebrow">YOUR DIMENSIONS</div><h2>Where your moments belong</h2><a class="secondary manage-rhythmos-link" href="#manage-rhythmos">Manage Rhythmos</a></div></div>
+<section class="rhythmos-journey">
 {% if request.args.get('focus') %}<p class="insight-note">Explore the Rhythmos connected to your day.</p>{% endif %}
 <div class="rhythmos-cards">
 {% for a in areas if a.active %}
