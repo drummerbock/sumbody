@@ -548,3 +548,56 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
   .silk-toolbar .silk-tool{min-width:0;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.76rem;}
   footer{grid-template-columns:repeat(4,minmax(0,1fr))!important;}
 }
+
+
+/* 2026-10-21: Rhythmos, Audify, onboarding, and Today cleanup */
+.rhythmos-cards{gap:8px;margin-top:8px}
+.rhythmos-card{background:transparent;border-color:var(--line);padding:10px 14px;border-radius:12px;transition:background .15s,border-color .15s}
+.rhythmos-card:hover{background:var(--surface2);border-color:#4a4840}
+.rhythmos-row{min-height:56px;padding:10px 14px}
+.rhythmos-row h3{font-size:1rem}
+.rhythmos-row p{font-size:.75rem}
+.rhythmos-next{margin:14px 0 24px}
+.rhythmos-manage{margin-top:24px;padding-top:18px}
+.onboarding-accent-note{margin-top:10px;color:var(--muted);font-size:14px;line-height:1.55}
+
+.audify-insights{margin-top:20px;padding-bottom:30px}
+.audify-kpi-grid{margin-bottom:10px}
+.audify-insights .insight-timeline{margin-bottom:10px}
+.audify-discovery>.card{padding:18px 20px}
+.audify-discovery .insight-area{margin:9px 0}
+.audify-beats{padding-top:32px}
+.audify-chart-controls{display:grid;grid-template-columns:minmax(180px,1.35fr) repeat(2,minmax(140px,.8fr)) minmax(120px,.7fr) auto;gap:8px;align-items:end;margin:12px 0 10px}
+.audify-chart-controls label{display:grid;gap:5px;min-width:0}
+.audify-chart-controls label>span{color:var(--muted);font-size:11px;font-weight:750;letter-spacing:.04em}
+.audify-chart-controls input,.audify-chart-controls select{min-height:40px;padding:9px 10px}
+.audify-chart-controls .secondary{min-height:40px}
+.audify-range-note{margin:4px 0 12px;color:var(--muted);font-size:12px}
+.audify-range-note a{color:var(--gold2)}
+.audify-no-range-results{margin:12px 0 2px}
+.audify-welcome{margin-top:10px}
+
+.day-ledger .beat-row{position:relative;grid-template-columns:minmax(0,1fr) 44px 42px;gap:10px}
+.beat-details{grid-column:3;grid-row:1 / span 2;justify-self:end;align-self:center;position:relative;flex-shrink:0}
+.beat-details>summary{list-style:none;display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;letter-spacing:1px}
+.beat-details>summary::-webkit-details-marker{display:none}
+.beat-details>summary:hover,.beat-details[open]>summary{background:var(--surface2);color:var(--ink)}
+.beat-detail-menu{position:absolute;right:0;top:calc(100% + 7px);z-index:15;width:154px;padding:7px;display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.beat-detail-menu form{margin:0;display:block}
+.beat-detail-menu a,.beat-detail-menu button{width:100%;min-height:38px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-decoration:none;font-size:12px}
+@media(max-width:767px){
+  a.rhythmos-card.rhythmos-row{min-height:54px!important;padding:9px 12px!important}
+  .rhythmos-row h3{font-size:.95rem!important}
+  .rhythmos-row p{font-size:.72rem!important}
+  .audify-insights{margin-top:14px;padding-bottom:24px}
+  .audify-chart-controls{grid-template-columns:1fr 1fr;gap:8px}
+  .audify-chart-controls .audify-control-scope{grid-column:1/-1}
+  .audify-chart-controls label:nth-of-type(4){grid-column:1/-1}
+  .audify-chart-controls .secondary{grid-column:1/-1}
+  .day-ledger .beat-row{grid-template-columns:minmax(0,1fr) 44px 42px;gap:6px}
+  .beat-detail-menu{right:0}
+}
+@media(max-width:370px){
+  .day-ledger .beat-row{grid-template-columns:minmax(0,1fr) 42px 38px}
+  .beat-details>summary{width:36px;height:36px}
+}
