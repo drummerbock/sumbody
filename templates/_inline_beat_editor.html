@@ -1,0 +1,17 @@
+<div class="beat-inline-editor" hidden>
+  <form class="beat-inline-form" method="post" action="{{url_for('edit_sum',entry_id=e.id)}}" data-beat-id="{{e.id}}">
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+    <label class="beat-inline-description">Moment<textarea name="description" rows="2" required maxlength="2000">{{e.description}}</textarea></label>
+    <div class="beat-inline-fields">
+      <label>Rhythmos<select name="life_area_id"><option value="">No Rhythmos</option>{% for area in areas %}<option value="{{area.id}}" {% if e.life_area_id == area.id %}selected{% endif %}>{{area.name}}</option>{% endfor %}</select></label>
+      <label>Date<input type="date" name="occurred_on" value="{{e.occurred_on.isoformat()}}" required></label>
+    </div>
+    <label class="beat-inline-checkbox"><input type="checkbox" name="accented" value="yes" {% if e.accented %}checked{% endif %}> Accent this Beat</label>
+    <div class="beat-inline-actions">
+      <button type="button" class="archive-button beat-inline-archive" data-archive-url="{{url_for('toggle_sum_archive',entry_id=e.id)}}">{{'Restore Beat' if e.archived else 'Archive Beat'}}</button>
+      <button type="button" class="secondary beat-inline-cancel">Cancel</button>
+      <button type="submit" class="primary">Save changes</button>
+    </div>
+    <p class="beat-inline-status" role="status" aria-live="polite"></p>
+  </form>
+</div>
