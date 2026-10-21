@@ -86,13 +86,13 @@
     <section class="beat-library-day" aria-label="{{day.strftime('%A, %B %d, %Y')}}">
       <h3>{{day.strftime('%A, %B %d, %Y')}}</h3>
       {% for e in group %}
-      <article class="entry beat-library-entry">
+      <article class="entry beat-library-entry beat-editable">
         <div class="entry-copy"><b>{{e.description}}</b><span>{{e.life_area.name if e.life_area else 'No Rhythmos'}}</span></div>
         <div class="entry-actions">
-          <a class="secondary" href="{{url_for('edit_sum',entry_id=e.id)}}">Edit</a>
           <form class="accent-form" method="post" action="{{url_for('toggle_sum_accent',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="accent-button {{'is-accented' if e.accented}}" type="submit" aria-pressed="{{'true' if e.accented else 'false'}}" aria-label="{{'Remove Accent' if e.accented else 'Accent this Beat'}}"><span class="accent-mark" aria-hidden="true">&gt;</span></button></form>
-          <form method="post" action="{{url_for('toggle_sum_archive',entry_id=e.id)}}"><input type="hidden" name="csrf_token" value="{{csrf_token()}}"><button class="{{'restore-button' if archived_view else 'archive-button'}}" type="submit">{{'Restore' if archived_view else 'Archive'}}</button></form>
+          <button type="button" class="beat-inline-toggle" aria-label="Edit Beat" aria-expanded="false" title="Edit Beat"><span aria-hidden="true">•••</span></button>
         </div>
+        {% include "_inline_beat_editor.html" %}
       </article>
       {% endfor %}
     </section>
