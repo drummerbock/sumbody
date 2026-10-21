@@ -4,51 +4,56 @@
 <div class="eyebrow">MAKE YOUR RHYTHM PERCEPTIBLE</div>
 <h1 class="page-heading">Audify{% if selected_area %}: {{selected_area.name}}{% endif %}</h1>
 
-<div class="audify-context"><form method="get" action="{{url_for('history')}}" class="audify-scope"><label for="audify-area">Explore rhythm</label><select id="audify-area" name="area" onchange="this.form.submit()"><option value="">Your overall rhythm</option>{% for a in areas %}<option value="{{a.id}}" {% if selected_area and selected_area.id == a.id %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select><noscript><button type="submit">Explore</button></noscript></form>{% if selected_area %}<a href="{{url_for('goals')}}#rhythmos-{{selected_area.id}}">{{selected_area.name}} in Rhythmos →</a>{% else %}<a href="{{url_for('goals')}}">View Rhythmos →</a>{% endif %}</div>
-
-
 <section class="audify-insights">
-  <div class="section-head audify-insights-head">
-    <div>
-      <div class="eyebrow">INSIGHTS</div>
-      <h2>{% if selected_area %}The rhythm of {{selected_area.name}}{% else %}What your rhythm is showing{% endif %}</h2>
-      <p class="insight-note">A view of the moments you've recorded.</p>
-    </div>
-    <a class="secondary audify-cta" href="#beats">See your Beats ↓</a>
-  </div>
-
   {% if insight_total_count %}
   <div class="audify-kpi-grid" aria-label="Overview of recorded Beats">
     <div class="insight-summary card"><strong>{{insight_total_count}}</strong><span>Recorded Beats</span><span class="insight-subline">{{unassigned_count}} without a Rhythmos</span></div>
     <div class="insight-summary card"><strong>{{(insight_accent_count / insight_total_count * 100)|round|int}}%</strong><span>Beats accented</span><span class="insight-subline">{{insight_accent_count}} of {{insight_total_count}} Beats</span></div>
   </div>
+
   <div class="insight-timeline card">
-      <div class="section-head"><h3>Past seven days</h3></div>
-      <div class="audify-bars" role="img" aria-label="Recorded Beats and Accents over the past seven days: {% for day in timeline %}{{day.date}}: {{day.count}} Beats, {{day.accents}} Accents{% if not loop.last %}, {% endif %}{% endfor %}">
-        {% for day in timeline %}
-        <div class="audify-day"><span class="audify-bar-track"><span class="audify-bar-fill" style="height:{{(day.count / max_day_count * 100)|round|int if max_day_count else 0}}%"><span class="audify-accent-segment" style="height:{{(day.accents / day.count * 100)|round|int if day.count else 0}}%"></span></span></span><b>{{day.count}}</b><small>{{day.label}}</small></div>
-        {% endfor %}
-      </div>
-      <p class="insight-note"><span class="audify-legend-swatch"></span> Accents are included within the total Beats.</p>
+    <div class="section-head"><h3>Past seven days</h3></div>
+    <div class="audify-bars" role="img" aria-label="Recorded Beats and Accents over the past seven days: {% for day in timeline %}{{day.date}}: {{day.count}} Beats, {{day.accents}} Accents{% if not loop.last %}, {% endif %}{% endfor %}">
+      {% for day in timeline %}
+      <div class="audify-day"><span class="audify-bar-track"><span class="audify-bar-fill" style="height:{{(day.count / max_day_count * 100)|round|int if max_day_count else 0}}%"><span class="audify-accent-segment" style="height:{{(day.accents / day.count * 100)|round|int if day.count else 0}}%"></span></span></span><b>{{day.count}}</b><small>{{day.label}}</small></div>
+      {% endfor %}
     </div>
+    <p class="insight-note"><span class="audify-legend-swatch"></span> Accents are included within the total Beats.</p>
+  </div>
+  {% endif %}
+
   <div class="audify-discovery">
     <section class="card">
-{% if selected_area %}<h3>How your recorded rhythm develops</h3><p class="insight-note">The seven-day chart above shows the pace and emphasis of your recorded Beats within {{selected_area.name}}. Explore individual moments below to understand the pattern.</p><a href="#beats" class="secondary">See {{selected_area.name}} Beats →</a>{% else %}      <h3>{% if selected_area %}Beats within {{selected_area.name}}{% else %}Beats across your Rhythmos{% endif %}</h3>
-      
-      <form method="get" action="{{url_for('history')}}" class="audify-sort"><label for="rhythmos-sort">Sort Rhythmos</label><select id="rhythmos-sort" name="sort" onchange="this.form.submit()"><option value="newest" {{'selected' if rhythmos_sort == 'newest'}}>Newest</option><option value="oldest" {{'selected' if rhythmos_sort == 'oldest'}}>Oldest</option><option value="most" {{'selected' if rhythmos_sort == 'most'}}>Most Beats</option></select>{% if selected_area %}<input type="hidden" name="area" value="{{selected_area.id}}">{% endif %}</form>
-      {% for area in insight_area_rows %}
-      {% if loop.index == 7 %}<details class="audify-more-areas"><summary>Show all Rhythmos</summary>{% endif %}
-      <div class="insight-area">
-        <div class="insight-area-label"><b>{{area.name}}{% if area.created_at %}<small class="rhythmos-created">Created {{area.created_at.strftime('%b %-d, %Y')}}</small>{% endif %}</b><span>{{area.count}} · {{(area.count / insight_total_count * 100)|round|int}}%</span></div>
-        <div class="insight-track" role="img" aria-label="{{area.name}}: {{area.count}} of {{insight_total_count}} recorded Beats"><span style="width:{{(area.count / max_area_count * 100)|round|int if max_area_count else 0}}%"></span></div>
-      </div>
-      {% endfor %}
-      {% if insight_area_rows|length > 6 %}</details>{% endif %}
-{% endif %}
+      <h3>{% if selected_area %}Beats within {{selected_area.name}}{% else %}Beats across your Rhythmos{% endif %}</h3>
+
+      <form method="get" action="{{url_for('history')}}" class="audify-chart-controls">
+        <label class="audify-control-scope"><span>Explore rhythm</span><select name="area"><option value="">Your overall rhythm</option>{% for a in areas %}<option value="{{a.id}}" {% if selected_area and selected_area.id == a.id %}selected{% endif %}>{{a.name}}</option>{% endfor %}</select></label>
+        <label><span>From</span><input type="date" name="chart_start" value="{{chart_start}}"></label>
+        <label><span>Through</span><input type="date" name="chart_end" value="{{chart_end}}"></label>
+        <label><span>Sort</span><select name="sort"><option value="newest" {{'selected' if rhythmos_sort == 'newest'}}>Newest</option><option value="oldest" {{'selected' if rhythmos_sort == 'oldest'}}>Oldest</option><option value="most" {{'selected' if rhythmos_sort == 'most'}}>Most Beats</option></select></label>
+        <button type="submit" class="secondary">Apply</button>
+      </form>
+
+      {% if chart_start or chart_end %}
+      <p class="audify-range-note">Showing the Rhythmos chart for the selected date range. {% if selected_area %}<a href="{{url_for('history', area=selected_area.id, sort=rhythmos_sort)}}">Reset dates</a>{% else %}<a href="{{url_for('history', sort=rhythmos_sort)}}">Reset dates</a>{% endif %}</p>
+      {% endif %}
+
+      {% if chart_total_count %}
+        {% for area in insight_area_rows %}
+        {% if loop.index == 7 %}<details class="audify-more-areas"><summary>Show all Rhythmos</summary>{% endif %}
+        <div class="insight-area">
+          <div class="insight-area-label"><b>{{area.name}}{% if area.created_at %}<small class="rhythmos-created">Created {{area.created_at.strftime('%b %-d, %Y')}}</small>{% endif %}</b><span>{{area.count}} · {{(area.count / chart_total_count * 100)|round|int}}%</span></div>
+          <div class="insight-track" role="img" aria-label="{{area.name}}: {{area.count}} of {{chart_total_count}} recorded Beats in this chart range"><span style="width:{{(area.count / max_area_count * 100)|round|int if max_area_count else 0}}%"></span></div>
+        </div>
+        {% endfor %}
+        {% if insight_area_rows|length > 6 %}</details>{% endif %}
+      {% else %}
+        <p class="insight-note audify-no-range-results">No recorded Beats match this Rhythmos and date range.</p>
+      {% endif %}
     </section>
-    {% if comm_known %}<p class="insight-note audify-sharing">Shared with someone: {{communicated}} of {{comm_known}} Beats with a recorded sharing status.</p>{% endif %}
   </div>
-  {% else %}
+
+  {% if not insight_total_count %}
   <div class="card audify-welcome"><h2>Nothing to analyze yet — and that's okay.</h2><p>When you choose to record a Beat, patterns can begin to appear here.</p><button type="button" class="primary" data-open-composer>Record a Beat</button></div>
   {% endif %}
 </section>
