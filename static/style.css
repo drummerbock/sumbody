@@ -601,3 +601,39 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
   .day-ledger .beat-row{grid-template-columns:minmax(0,1fr) 42px 38px}
   .beat-details>summary{width:36px;height:36px}
 }
+
+
+/* Inline Beat editor shared by Today and Audify */
+.beat-editable{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;column-gap:12px;align-items:center;position:relative}
+.beat-editable .entry-copy{grid-column:1;grid-row:1;display:grid!important;gap:5px;min-width:0}
+.beat-editable .entry-copy .beat-text-accent{display:contents}
+.beat-editable .entry-copy .beat-text-accent>b{grid-column:1;grid-row:1}
+.beat-editable .entry-copy>span{grid-column:1;grid-row:2}
+.beat-editable .entry-copy .accent-form{grid-column:2;grid-row:1 / span 2}
+.beat-editable.beat-row .entry-copy{grid-column:1/3;display:grid!important;grid-template-columns:minmax(0,1fr) 44px;align-items:center}
+.beat-editable.beat-row .entry-copy .accent-form{justify-self:center}
+.beat-editable.beat-row>.beat-inline-toggle{grid-column:3;grid-row:1}
+.beat-editable .beat-inline-toggle{min-width:40px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.beat-editable .beat-inline-toggle:hover,.beat-editable .beat-inline-toggle[aria-expanded="true"]{background:var(--surface2);color:var(--ink)}
+.beat-editable .beat-inline-editor{grid-column:1/-1;grid-row:2;width:100%;min-width:0;margin:14px 0 4px;padding:18px;background:var(--surface2);border:1px solid var(--line);border-radius:14px}
+.beat-editable .beat-inline-editor[hidden]{display:none!important}
+.beat-inline-form{display:grid;gap:14px}
+.beat-inline-form label{display:grid;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
+.beat-inline-form textarea{min-height:70px;resize:vertical}
+.beat-inline-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.beat-inline-checkbox{display:flex!important;align-items:center;gap:8px;font-size:13px!important;color:var(--ink)!important}
+.beat-inline-checkbox input{width:18px;height:18px;flex:none;accent-color:var(--brand-red)}
+.beat-inline-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+.beat-inline-actions button{min-height:40px}
+.beat-inline-actions .beat-inline-archive{margin-right:auto}
+.beat-inline-status{margin:0;color:var(--muted);font-size:12px}
+.beat-library-entry.beat-editable .entry-actions{grid-column:2/4;grid-row:1;display:flex;gap:8px}
+.beat-library-entry.beat-editable .entry-actions .beat-inline-toggle{min-width:40px}
+@media(max-width:700px){
+ .beat-editable{column-gap:6px}
+ .beat-editable .beat-inline-editor{padding:12px;margin-top:12px}
+ .beat-inline-fields{grid-template-columns:1fr}
+ .beat-inline-actions{gap:6px}
+ .beat-inline-actions button{font-size:12px;padding:9px 11px}
+ .beat-editable.beat-row .entry-copy{grid-template-columns:minmax(0,1fr) 42px}
+}
