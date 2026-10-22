@@ -558,6 +558,8 @@ def create_app():
             except ValueError:
                 occurred_on = None
             if not description or (area_id is not None and not area) or not occurred_on:
+                if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                    return jsonify(ok=False, error="Please check the Beat details."), 400
                 flash("Please check the Beat details.", "error")
             else:
                 entry.description = description
@@ -566,8 +568,19 @@ def create_app():
                 entry.accented = request.form.get("accented") == "yes"
                 entry.communicated = True if request.form.get("communicated") == "yes" else None
                 db.session.commit()
+                if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                    return jsonify(ok=True, entry={
+                        "id": entry.id,
+                        "description": entry.description,
+                        "life_area": area.name if area else "No Rhythmos",
+                        "life_area_id": entry.life_area_id,
+                        "occurred_on": entry.occurred_on.isoformat(),
+                        "accented": entry.accented,
+                    })
                 flash("Beat updated.", "success")
                 return redirect(url_for("history") + "#beats")
+        if request.args.get("inline") == "1":
+            return render_template("_inline_beat_editor.html", e=entry, areas=areas)
         return render_template("edit_beat.html", entry=entry, areas=areas)
 
     @app.post("/sum/<int:entry_id>/toggle-accent")

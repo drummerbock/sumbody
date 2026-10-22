@@ -217,6 +217,28 @@
     article.append(copy, details);
     entries.prepend(article);
     if (empty) empty.hidden = true;
+    // New Silk Recorder rows use the same server-rendered editor as existing Beats.
+    fetch('/sum/' + entry.id + '/edit?inline=1', {credentials:'same-origin'})
+      .then(response => {if (!response.ok) throw new Error('Editor unavailable');return response.text();})
+      .then(html => {
+        const fragment = document.createElement('template');
+        fragment.innerHTML = html.trim();
+        const editor = fragment.content.querySelector('.beat-inline-editor');
+        if (!editor || !article.isConnected) return;
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'beat-inline-toggle';
+        toggle.setAttribute('aria-label', 'Edit Beat');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.title = 'Edit Beat';
+        const dots = document.createElement('span');
+        dots.setAttribute('aria-hidden','true');
+        dots.textContent = '•••';
+        toggle.append(dots);
+        details.replaceWith(toggle, editor);
+        article.classList.add('beat-editable');
+      })
+      .catch(() => { /* The existing Edit Beat link remains usable as a fallback. */ });
   };
 
   const activateComposer = () => composer.classList.add('is-active');
@@ -357,5 +379,106 @@
 {% endif %}
 
 {% block scripts %}{% endblock %}
+<script>
+/* Shared inline Beat editing: Today and Audify, including freshly recorded Beats. */
+(() => {
+  const closeEditor = (row, reset=true) => {
+    if (!row) return;
+    const editor = row.querySelector('.beat-inline-editor');
+    const toggle = row.querySelector('.beat-inline-toggle');
+    if (!editor || !toggle) return;
+    if (reset) editor.querySelector('form')?.reset();
+    editor.hidden = true;
+    toggle.setAttribute('aria-expanded','false');
+    row.classList.remove('beat-editing');
+    const status = editor.querySelector('.beat-inline-status');
+    if (status) status.textContent='';
+  };
+
+  document.addEventListener('click', async event => {
+    const toggle = event.target.closest('.beat-inline-toggle');
+    if (toggle) {
+      const row = toggle.closest('.beat-editable');
+      if (!row) return;
+      const editor = row.querySelector('.beat-inline-editor');
+      if (!editor) return;
+      const opening = editor.hidden;
+      document.querySelectorAll('.beat-editable.beat-editing').forEach(other => closeEditor(other));
+      editor.hidden = !opening;
+      row.classList.toggle('beat-editing', opening);
+      toggle.setAttribute('aria-expanded',String(opening));
+      if (opening) editor.querySelector('textarea[name="description"]')?.focus();
+      return;
+    }
+    const cancel = event.target.closest('.beat-inline-cancel');
+    if (cancel) {
+      closeEditor(cancel.closest('.beat-editable'));
+      return;
+    }
+    const archive = event.target.closest('.beat-inline-archive');
+    if (archive) {
+      const row=archive.closest('.beat-editable');
+      const form=row?.querySelector('.beat-inline-form');
+      const status=row?.querySelector('.beat-inline-status');
+      if (!form || !status) return;
+      archive.disabled=true;
+      try {
+        const payload=new FormData();
+        payload.set('csrf_token',form.querySelector('[name="csrf_token"]').value);
+        const response=await fetch(archive.dataset.archiveUrl,{
+          method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'},body:payload,credentials:'same-origin'
+        });
+        if (!response.ok) throw new Error('Unable to archive this Beat.');
+        // Archived Beats are no longer part of Today's or the active Audify listing.
+        window.location.reload();
+      } catch(error) {
+        status.textContent=error.message || 'Unable to archive.';
+        archive.disabled=false;
+      }
+    }
+  });
+
+  document.addEventListener('submit', async event => {
+    const form=event.target.closest('.beat-inline-form');
+    if (!form) return;
+    event.preventDefault();
+    const row=form.closest('.beat-editable');
+    const status=form.querySelector('.beat-inline-status');
+    const save=form.querySelector('button[type="submit"]');
+    const previousLabel=save.textContent;
+    save.disabled=true;
+    save.textContent='Saving…';
+    if (status) status.textContent='';
+    try {
+      const response=await fetch(form.action,{
+        method:'POST',body:new FormData(form),
+        headers:{'X-Requested-With':'XMLHttpRequest'},
+        credentials:'same-origin'
+      });
+      const result=await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || 'Unable to save Beat.');
+      const copy=row.querySelector('.entry-copy');
+      const description=copy?.querySelector('b');
+      const area=copy?.querySelector(':scope > span');
+      if (description) description.textContent=result.entry.description;
+      if (area) area.textContent=result.entry.life_area;
+      const accent=row.querySelector('.accent-button');
+      if (accent) {
+        accent.classList.toggle('is-accented',result.entry.accented);
+        accent.setAttribute('aria-pressed',String(result.entry.accented));
+        accent.setAttribute('aria-label',result.entry.accented?'Remove Accent':'Accent this Beat');
+      }
+      form.dataset.originalDescription=result.entry.description;
+      if (status) status.textContent='Saved.';
+      closeEditor(row,false);
+    } catch(error) {
+      if (status) status.textContent=error.message || 'Unable to save Beat.';
+    } finally {
+      save.disabled=false;
+      save.textContent=previousLabel;
+    }
+  });
+})();
+</script>
 </body>
 </html>
