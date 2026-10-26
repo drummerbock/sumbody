@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Manage Beat Data · Becoming the Heartbeat{% endblock %}
+{% block content %}
+<section class="panel" style="max-width:800px;margin:2rem auto;padding:1.5rem">
+  <h1>Manage Beat Data</h1>
+  <p>Import multiple Beats from a spreadsheet, or export your history.</p>
+  <h2>Import Beats</h2>
+  <p>Download the template, fill it in using Excel or Google Sheets, then save as CSV. Date and Beat are required. Time and Rhythmos are optional. Accent accepts Yes or No and defaults to No. Imported Beats have a value of 1.</p>
+  <p><a class="button" href="{{ url_for('beat_data.template') }}">Download CSV template</a></p>
+  <form action="{{ url_for('beat_data.preview') }}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="beat-csv">Choose CSV file</label>
+    <input id="beat-csv" type="file" name="file" accept=".csv,text/csv" required>
+    <button type="submit">Preview Beats</button>
+  </form>
+  {% if errors %}
+  <h3>Fix these errors and upload again</h3>
+  <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if token %}
+  <h2>Review {{ rows|length }} Beats</h2>
+  <div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Time</th><th>Beat</th><th>Rhythmos</th><th>Accent</th></tr></thead>
+  <tbody>{% for row in rows %}<tr><td>{{ row.date }}</td><td>{{ row.time or '—' }}</td><td>{{ row.beat }}</td><td>{{ row.area or 'Unassigned' }}</td><td>{{ 'Yes' if row.accent else 'No' }}</td></tr>{% endfor %}</tbody></table></div>
+  <form method="post" action="{{ url_for('beat_data.confirm') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="token" value="{{ token }}">
+    {% if new_areas %}
+    <p>New Rhythmos: {{ new_areas|join(', ') }}</p>
+    <label><input type="checkbox" name="create_areas" value="yes"> Create these Rhythmos (otherwise leave these Beats unassigned)</label>
+    {% endif %}
+    <button type="submit">Import {{ rows|length }} Beats</button>
+  </form>
+  {% endif %}
+  <hr>
+  <h2>Export Beats</h2>
+  <p>Download your history in the same CSV format. Existing Beat times are not separately stored; exported Time cells will be blank.</p>
+  <a class="button" href="{{ url_for('beat_data.export') }}">Export Beats as CSV</a>
+</section>
+{% endblock %}
