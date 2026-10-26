@@ -808,6 +808,8 @@ def create_app():
         db.session.commit()
         print("User created.")
 
+    from beat_csv import register_beat_data
+    register_beat_data(app, db, SumEntry, LifeArea)
     return app
 
 @login_manager.user_loader
