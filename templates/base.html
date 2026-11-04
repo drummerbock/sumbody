@@ -335,7 +335,7 @@
       if (count) count.textContent = data.today_count;
       if (accentCount) accentCount.textContent = data.today_accents;
       updateWeekRhythm(data.entry.occurred_on);
-      if (returnNote && data.entry.occurred_on === today) {
+      if (returnNote) {
         try { localStorage.setItem('heartbeat-return-note:' + returnNote.dataset.returnKey, 'seen'); } catch (error) {}
         returnNote.hidden = true;
       }
