@@ -93,6 +93,36 @@
   const empty = document.getElementById('today-empty');
   const csrf = form.querySelector('input[name="csrf_token"]').value;
   const today = form.dataset.today;
+  const returnNote = document.getElementById('return-note');
+  if (returnNote) {
+    const returnKey = 'heartbeat-return-note:' + returnNote.dataset.returnKey;
+    try {
+      if (localStorage.getItem(returnKey) === 'seen') returnNote.hidden = true;
+    } catch (error) {}
+    const dismissReturn = returnNote.querySelector('[data-dismiss-return]');
+    if (dismissReturn) dismissReturn.addEventListener('click', () => {
+      try { localStorage.setItem(returnKey, 'seen'); } catch (error) {}
+      returnNote.hidden = true;
+    });
+  }
+  const updateWeekRhythm = (entryDate) => {
+    const plot = document.getElementById('week-rhythm');
+    const day = plot && plot.querySelector('.week-rhythm-day[data-date="' + entryDate + '"]');
+    if (!plot || !day) return;
+    const count = day.querySelector('[data-beat-count]');
+    count.textContent = String(Number(count.textContent || 0) + 1);
+    const days = [...plot.querySelectorAll('.week-rhythm-day')];
+    const maxCount = Math.max(...days.map(item => Number(item.querySelector('[data-beat-count]').textContent || 0)), 1);
+    days.forEach(item => {
+      const itemCount = Number(item.querySelector('[data-beat-count]').textContent || 0);
+      item.querySelector('.week-rhythm-fill').style.height = (itemCount / maxCount * 100) + '%';
+    });
+    plot.setAttribute('aria-label', 'Recorded Beats over the past seven days: ' +
+      days.map(item => item.dataset.label + ' ' + (item.querySelector('[data-beat-count]').textContent || '0')).join('; '));
+    day.classList.remove('beat-arrived');
+    void day.offsetWidth;
+    day.classList.add('beat-arrived');
+  };
   const areaToggle = document.getElementById('silk-area-toggle');
   const areaPicker = document.getElementById('silk-area-picker');
   const areaLabel = document.getElementById('silk-area-label');
@@ -304,6 +334,11 @@
 
       if (count) count.textContent = data.today_count;
       if (accentCount) accentCount.textContent = data.today_accents;
+      updateWeekRhythm(data.entry.occurred_on);
+      if (returnNote) {
+        try { localStorage.setItem('heartbeat-return-note:' + returnNote.dataset.returnKey, 'seen'); } catch (error) {}
+        returnNote.hidden = true;
+      }
       if (data.entry.occurred_on === today) addEntryToLedger(data.entry);
 
       input.value = '';
@@ -323,7 +358,7 @@
       status.className = 'rapid-status success';
       status.replaceChildren();
       const added = document.createElement('span');
-      added.textContent = 'Saved';
+      added.textContent = 'Beat recorded';
       const accent = document.createElement('button');
       accent.type = 'button';
       accent.className = 'rapid-accent';
