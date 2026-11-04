@@ -11,6 +11,32 @@
 
 </section>
 
+<section class="week-rhythm-card" aria-labelledby="week-rhythm-heading">
+  {% if show_return_note %}
+  <aside class="return-note" id="return-note" data-return-key="{{return_key}}">
+    <p><strong>Welcome back.</strong> Start wherever you are.</p>
+    <div class="return-note-actions">
+      <button type="button" class="return-note-start" data-open-composer>Record a Beat</button>
+      <button type="button" class="return-note-dismiss" data-dismiss-return aria-label="Dismiss welcome message">×</button>
+    </div>
+  </aside>
+  {% endif %}
+  <div class="section-head">
+    <div><div class="eyebrow">A VIEW OF YOUR RECORDED BEATS</div><h2 id="week-rhythm-heading">Your rhythm this week</h2></div>
+    <a class="week-audify-link" href="{{url_for('history')}}">See in Audify <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="week-rhythm" id="week-rhythm" role="img" aria-label="Recorded Beats over the past seven days: {% for day in week_rhythm %}{{day.label}} {{day.count}}{% if not loop.last %}; {% endif %}{% endfor %}">
+    {% for day in week_rhythm %}
+    <div class="week-rhythm-day" data-date="{{day.date.isoformat()}}" data-label="{{day.label}}">
+      <span class="week-rhythm-track" aria-hidden="true"><span class="week-rhythm-fill" style="height:{{(day.count / week_max_count * 100)|round|int if week_max_count else 0}}%"></span></span>
+      <b data-beat-count>{{day.count if day.count else ""}}</b>
+      <small>{{day.label}}</small>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="week-rhythm-note">A quiet picture of the moments you chose to keep.</p>
+</section>
+
 <section class="day-ledger">
   <div class="section-head">
     <div><div class="eyebrow">TODAY'S BEATS</div><h2>Moments you've chosen to remember</h2></div>

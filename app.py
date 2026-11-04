@@ -172,6 +172,34 @@ def create_app():
         recent = SumEntry.query.filter_by(
             user_id=current_user.id, occurred_on=today
         ).order_by(SumEntry.archived.asc(), SumEntry.logged_at.desc()).all()
+
+        week_start = today - timedelta(days=6)
+        week_counts = db.session.query(
+            SumEntry.occurred_on, func.count(SumEntry.id)
+        ).filter(
+            SumEntry.user_id == current_user.id,
+            SumEntry.archived.is_(False),
+            SumEntry.occurred_on >= week_start,
+            SumEntry.occurred_on <= today,
+        ).group_by(SumEntry.occurred_on).all()
+        week_counts_by_day = {day: count for day, count in week_counts}
+        week_rhythm = [
+            {
+                "date": week_start + timedelta(days=offset),
+                "label": (week_start + timedelta(days=offset)).strftime("%a"),
+                "count": week_counts_by_day.get(week_start + timedelta(days=offset), 0),
+            }
+            for offset in range(7)
+        ]
+        week_max_count = max((day["count"] for day in week_rhythm), default=0)
+        last_recorded_day = db.session.query(func.max(SumEntry.occurred_on)).filter_by(
+            user_id=current_user.id, archived=False
+        ).scalar()
+        days_since_last_beat = (today - last_recorded_day).days if last_recorded_day else None
+        show_return_note = bool(
+            last_recorded_day and days_since_last_beat >= 3 and today_count == 0
+        )
+
         today_rhythmos = {}
         for beat in recent:
             if not beat.archived and beat.life_area:
@@ -187,6 +215,10 @@ def create_app():
             yesterday_accents=yesterday_accents,
             recent=recent,
             today_rhythmos=today_rhythmos,
+            week_rhythm=week_rhythm,
+            week_max_count=week_max_count,
+            show_return_note=show_return_note,
+            return_key=last_recorded_day.isoformat() if show_return_note else "",
         )
 
     @app.post("/silk/preferences")

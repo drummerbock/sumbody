@@ -637,3 +637,30 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
  .beat-inline-actions button{font-size:12px;padding:9px 11px}
  .beat-editable.beat-row .entry-copy{grid-template-columns:minmax(0,1fr) 42px}
 }
+
+/* Gentle rhythm feedback on Today's Tempo */
+.week-rhythm-card{margin:-35px 0 58px;padding:19px 21px 15px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#1b1b17,var(--surface) 70%)}
+.week-rhythm-card .section-head{align-items:center;margin-bottom:12px}
+.week-rhythm-card h2{font-size:25px}
+.week-rhythm{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(5px,2vw,14px);align-items:end;padding:7px 0 0}
+.week-rhythm-day{display:grid;grid-template-rows:58px 16px 16px;justify-items:center;align-items:end;gap:4px;min-width:0}
+.week-rhythm-track{display:flex;align-items:flex-end;justify-content:center;width:min(30px,100%);height:58px;overflow:hidden;border-radius:99px;background:var(--surface2)}
+.week-rhythm-fill{display:block;width:100%;min-height:0;border-radius:99px;background:linear-gradient(180deg,var(--gold2),var(--gold));transform-origin:bottom;transition:height .32s ease}
+.week-rhythm-day b{height:16px;color:var(--ink);font-family:Georgia,serif;font-size:13px;font-weight:400;line-height:16px}
+.week-rhythm-day small{color:var(--muted);font-size:11px;line-height:16px}
+.week-rhythm-note{margin:13px 0 0;color:var(--muted);font-size:12px}
+.week-audify-link{color:var(--gold2);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.week-audify-link:hover{text-decoration:underline}
+.return-note{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px;padding:11px 12px 11px 15px;border:1px solid #d9d1c233;border-radius:13px;background:#d9d1c20a}
+.return-note[hidden]{display:none}
+.return-note p{margin:0;color:var(--muted);font-size:14px}
+.return-note strong{color:var(--ink);font-weight:700}
+.return-note-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.return-note-start{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface2);color:var(--gold2);font-size:12px;font-weight:750;cursor:pointer}
+.return-note-dismiss{width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:21px;line-height:1;cursor:pointer}
+.return-note-dismiss:hover{background:var(--surface2);color:var(--ink)}
+.week-rhythm-day.beat-arrived .week-rhythm-fill{animation:beat-arrive .48s ease-out}
+@keyframes beat-arrive{0%{transform:scaleY(.18);opacity:.55}65%{transform:scaleY(1.08)}100%{transform:scaleY(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.week-rhythm-fill{transition:none}.week-rhythm-day.beat-arrived .week-rhythm-fill{animation:none}}
+@media(max-width:700px){.week-rhythm-card{margin:-20px 0 45px;padding:16px 14px 13px}.week-rhythm-card .section-head{align-items:center}.week-rhythm-card h2{font-size:21px}.week-rhythm-day{grid-template-rows:50px 16px 15px}.week-rhythm-track{height:50px;width:min(24px,100%)}.week-rhythm-note{font-size:11px}.return-note{align-items:flex-start;padding-left:11px}.return-note p{font-size:13px}.return-note-actions{gap:4px}.return-note-start{padding:7px 8px;font-size:11px}}
+@media(max-width:360px){.week-rhythm-card .section-head{align-items:flex-start;gap:8px}.week-rhythm-card h2{font-size:19px}.week-audify-link{font-size:11px}.return-note{flex-wrap:wrap}.return-note-actions{margin-left:auto}}
