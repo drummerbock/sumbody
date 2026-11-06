@@ -65,14 +65,25 @@ jobs:
             'cd /home/cb_sumbody/sumbody-next && python3 -m py_compile ./*.py'
 
       - name: Deploy and restart
+        env:
+          DEPLOY_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          ssh cb_sumbody@vps63698.dreamhostps.com <<'REMOTE'
-          set -e
+          ssh cb_sumbody@vps63698.dreamhostps.com "DEPLOY_ID=$DEPLOY_ID bash -s" <<'REMOTE'
+          set -euo pipefail
 
           LIVE="/home/cb_sumbody/sumbody.cameronjbock.com"
           NEXT="/home/cb_sumbody/sumbody-next"
           PID_FILE="$LIVE/gunicorn.pid"
           PROCESS_PATTERN='[g]unicorn.*0.0.0.0:8015.*app:app'
+          VENV_ROOT="/home/cb_sumbody/.sumbody-venvs"
+          VENV_LINK="/home/cb_sumbody/.sumbody-venv"
+          VENV_CANDIDATE="$VENV_ROOT/sumbody-$DEPLOY_ID"
+
+          mkdir -p "$VENV_ROOT"
+          rm -rf "$VENV_CANDIDATE"
+          python3 -m venv "$VENV_CANDIDATE"
+          "$VENV_CANDIDATE/bin/python" -m pip install --upgrade pip
+          "$VENV_CANDIDATE/bin/python" -m pip install -r "$NEXT/requirements.txt"
 
           export SECRET_KEY="$(cat /home/cb_sumbody/.sumbody_secret)"
           export DATABASE_URL="sqlite:////home/cb_sumbody/sumbody.cameronjbock.com/instance/sumbody.db"
@@ -81,7 +92,7 @@ jobs:
 
           # Verify the staged candidate before touching production.
           cd "$NEXT"
-          python3 -c 'from app import app'
+          PYTHONPATH="$NEXT" "$VENV_CANDIDATE/bin/python" -c 'from app import app'
 
           cp "$NEXT"/*.py "$NEXT/requirements.txt" "$LIVE/"
           rsync -a --delete "$NEXT/static/" "$LIVE/static/"
@@ -114,7 +125,7 @@ jobs:
 
           rm -f "$PID_FILE"
 
-          nohup /home/cb_sumbody/.local/bin/gunicorn \
+          nohup "$VENV_CANDIDATE/bin/gunicorn" \
             --pid "$PID_FILE" \
             -w 2 -b 0.0.0.0:8015 app:app \
             >> "$LIVE/gunicorn.log" 2>&1 < /dev/null &
@@ -122,6 +133,25 @@ jobs:
 
           for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
             if curl -fsS http://127.0.0.1:8015/login >/dev/null; then
+              OLD_VENV=""
+              LEGACY_VENV=""
+              if [ -L "$VENV_LINK" ]; then
+                OLD_VENV="$(readlink -f "$VENV_LINK" || true)"
+              elif [ -d "$VENV_LINK" ]; then
+                LEGACY_VENV="${VENV_LINK}-legacy-$DEPLOY_ID"
+                mv "$VENV_LINK" "$LEGACY_VENV"
+              fi
+
+              rm -f "$VENV_LINK"
+              ln -s "$VENV_CANDIDATE" "$VENV_LINK"
+
+              if [ -n "$OLD_VENV" ] && [ "$OLD_VENV" != "$VENV_CANDIDATE" ]; then
+                rm -rf "$OLD_VENV"
+              fi
+              if [ -n "$LEGACY_VENV" ]; then
+                rm -rf "$LEGACY_VENV"
+              fi
+
               echo "SUMbody deployed successfully"
               exit 0
             fi
